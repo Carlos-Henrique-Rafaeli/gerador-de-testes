@@ -54,7 +54,7 @@ Este projeto tem como objetivo desenvolver um sistema de geração de testes. O 
 
 #### Clone o Repositório
 ```
-https://github.com/alquimia-do-programador/gerador-de-testes
+https://github.com/Carlos-Henrique-Rafaeli/gerador-de-testes
 ```
 
 #### Navegue até a pasta raiz da solução
