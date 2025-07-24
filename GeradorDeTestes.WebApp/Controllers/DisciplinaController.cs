@@ -1,9 +1,8 @@
-﻿using GeradorDeTestes.Dominio.ModuloDisciplina;
-using GeradorDeTestes.Dominio.ModuloMateria;
-using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
+﻿using GeradorDeTestes.Aplicacao;
 using GeradorDeTestes.WebApp.Extensions;
 using GeradorDeTestes.WebApp.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace GeradorDeTestes.WebApp.Controllers;
 
@@ -11,78 +10,77 @@ namespace GeradorDeTestes.WebApp.Controllers;
     [Route("disciplinas")]
 public class DisciplinaController : Controller
 {
-    private readonly GeradorDeTestesDbContext contexto;
-    private readonly IRepositorioDisciplina repositorioDisciplina;
+    private readonly DisciplinaAppService disciplinaAppService;
 
-
-    public DisciplinaController(GeradorDeTestesDbContext contexto, IRepositorioDisciplina repositorioDisciplina)
+    public DisciplinaController(DisciplinaAppService disciplinaAppService)
     {
-        this.contexto = contexto;
-        this.repositorioDisciplina = repositorioDisciplina;
+        this.disciplinaAppService = disciplinaAppService;
     }
+
     [HttpGet]
     public IActionResult Index()
     {
-        var registros = repositorioDisciplina.SelecionarRegistros();
+        var resultado = disciplinaAppService.SelecionarTodos();
+
+        if (resultado.IsFailed)
+            return RedirectToAction("Home/Index");
+
+        var registros = resultado.Value;
 
         var visualizarVM = new VisualizarDisciplinaViewModel(registros);
 
+        var existeNotificacao = TempData.TryGetValue(nameof(NotificacaoViewModel), out var valor);
+
+        if (existeNotificacao && valor is string jsonString)
+        {
+            var notificacaoVm = JsonSerializer.Deserialize<NotificacaoViewModel>(jsonString);
+
+            ViewData.Add(nameof(NotificacaoViewModel), notificacaoVm);
+        }
+
+
         return View(visualizarVM);
     }
-    [HttpGet("Cadastrar")]
 
+    [HttpGet("Cadastrar")]
     public IActionResult Cadastrar()
     {
-        var CadastarVM = new CadastrarDisciplinaViewModel();
+        var cadastarVM = new CadastrarDisciplinaViewModel();
 
-        return View(CadastarVM);
+        return View(cadastarVM);
     }
 
     [HttpPost("cadastrar")]
     [ValidateAntiForgeryToken]
     public IActionResult Cadastrar(CadastrarDisciplinaViewModel cadastrarVM)
     {
-        var registros = repositorioDisciplina.SelecionarRegistros();
-
-        if (registros.Any(x => x.Nome.Equals(cadastrarVM.Nome)))
-            ModelState.AddModelError("CadastroUnico", "Já existe uma Disciplina com este nome.");
-
-        if (!ModelState.IsValid)
-            return View(cadastrarVM);
-
         var entidade = cadastrarVM.ParaEntidade();
 
-        var transacao = contexto.Database.BeginTransaction();
+        var resultado = disciplinaAppService.Cadastrar(entidade);
 
-        try
+        if (resultado.IsFailed)
         {
-            repositorioDisciplina.CadastrarRegistro(entidade);
+            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
 
-            contexto.SaveChanges();
-
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-
-            throw;
+            return View(cadastrarVM);
         }
 
         return RedirectToAction(nameof(Index));
     }
+
     [HttpGet("editar/{id:guid}")]
     public IActionResult Editar(Guid id)
     {
-        var registroSelecionado = repositorioDisciplina.SelecionarRegistroPorId(id);
+        var resultado = disciplinaAppService.SelecionarPorId(id);
 
-        if (registroSelecionado == null)
-            return NotFound();
+        if (resultado.IsFailed)
+            return RedirectToAction(nameof(Index));
+
+        var registroSelecionado = resultado.Value;
 
         var editarVM = new EditarDisciplinaViewMode(
             registroSelecionado.Id,
             registroSelecionado.Nome
-          
         );
 
         return View(editarVM);
@@ -91,33 +89,15 @@ public class DisciplinaController : Controller
     [HttpPost("editar/{id:guid}")]
     public IActionResult Editar(Guid id, EditarDisciplinaViewMode editarVM)
     {
-        var registros = repositorioDisciplina
-            .SelecionarRegistros()
-            .Where(r => r.Id != id);
+        var entidadeEditada = editarVM.ParaEntidade();
 
-        if (registros.Any(x => x.Nome.Equals(editarVM.Nome)))
-            ModelState.AddModelError("CadastroUnico", "Já existe um registro registrado com este nome.");
+        var resultado = disciplinaAppService.Editar(id, entidadeEditada);
 
-        if (!ModelState.IsValid)
+        if (resultado.IsFailed)
+        {
+            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
+
             return View(editarVM);
-
-        var entidade = editarVM.ParaEntidade();
-
-        var transacao = contexto.Database.BeginTransaction();
-
-        try
-        {
-            repositorioDisciplina.EditarRegistro(id, entidade);
-
-            contexto.SaveChanges();
-
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-
-            throw;
         }
 
         return RedirectToAction(nameof(Index));
@@ -126,10 +106,12 @@ public class DisciplinaController : Controller
     [HttpGet("excluir/{id:guid}")]
     public ActionResult Excluir(Guid id)
     {
-        var registroSelecionado = repositorioDisciplina.SelecionarRegistroPorId(id);
+        var resultado = disciplinaAppService.SelecionarPorId(id);
 
-        if (registroSelecionado == null)
+        if (resultado.IsFailed)
             return RedirectToAction(nameof(Index));
+
+        var registroSelecionado = resultado.Value;
 
         var excluirVM = new ExcluirDisciplinaViewModel(registroSelecionado.Id, registroSelecionado.Nome);
 
@@ -139,21 +121,28 @@ public class DisciplinaController : Controller
     [HttpPost("excluir/{id:guid}")]
     public ActionResult ExcluirConfirmado(Guid id)
     {
-        var transacao = contexto.Database.BeginTransaction();
+        var resultado = disciplinaAppService.Excluir(id);
 
-        try
+        if (resultado.IsFailed)
         {
-            repositorioDisciplina.ExcluirRegistro(id);
+            foreach (var erro in resultado.Errors)
+            {
+                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
+                {
+                    var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                        erro.Message,
+                        erro.Reasons[0].Message
+                    );
 
-            contexto.SaveChanges();
+                    TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
 
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-
-            throw;
+                    break;
+                }
+                else
+                {
+                    return RedirectToAction("Home/Erro");
+                }
+            }
         }
 
         return RedirectToAction(nameof(Index));

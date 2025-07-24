@@ -2,7 +2,6 @@ using GeradorDeTestes.Dominio.ModuloQuestao;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloQuestao;
 using GeradorDeTestes.Dominio.ModuloDisciplina;
 using GeradorDeTestes.Dominio.ModuloMateria;
-using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloDisciplina;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloMateria;
 using GeradorDeTestes.WebApp.ActionFilters;
@@ -10,8 +9,8 @@ using GeradorDeTestes.WebApp.DependencyInjection;
 using GeradorDeTestes.WebApp.Orm;
 using GeradorDeTestes.Dominio.ModuloTeste;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloTeste;
-using GeradorDeTestes.WebApp.Services;
 using QuestPDF.Infrastructure;
+using GeradorDeTestes.Aplicacao;
 
 namespace GeradorDeTestes.WebApp
 {
@@ -28,13 +27,10 @@ namespace GeradorDeTestes.WebApp
                 options.Filters.Add<LogarAcaoAttribute>();
             });
 
-
+            builder.Services.AddScoped<DisciplinaAppService>();
             builder.Services.AddScoped<IRepositorioMateria, RepositorioMateriaEmOrm>();
             builder.Services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
             builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
-
-            // builder.Services.AddScoped<IRepositorioDeVoces, RepositorioDeVoces>();
-            
             builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
 
             builder.Services.AddEntityFrameworkConfig(builder.Configuration);
