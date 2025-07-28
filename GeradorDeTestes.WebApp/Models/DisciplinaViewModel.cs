@@ -1,90 +1,90 @@
 ﻿using GeradorDeTestes.Dominio.ModuloDisciplina;
 using GeradorDeTestes.Dominio.ModuloMateria;
 using GeradorDeTestes.WebApp.Extensions;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.ComponentModel.DataAnnotations;
 
-namespace GeradorDeTestes.WebApp.Models
+namespace GeradorDeTestes.WebApp.Models;
+
+public abstract class FormularioDisciplinaViewModel
 {
-    public class FormularioDisciplinaViewModel
-    {
-        [Required(ErrorMessage = "O campo \"Nome\" é obrigatório.")]
-        [MinLength(3, ErrorMessage = "O campo \"Nome\" precisa conter ao menos 3 caracteres.")]
-        [MaxLength(100, ErrorMessage = "O campo \"Nome\" precisa conter no máximo 100 caracteres.")]
-        public string Nome { get; set; }
+    [Required(ErrorMessage = "O campo \"Nome\" é obrigatório.")]
+    [MinLength(2, ErrorMessage = "O campo \"Nome\" precisa conter ao menos 3 caracteres.")]
+    [MaxLength(100, ErrorMessage = "O campo \"Nome\" precisa conter no máximo 100 caracteres.")]
+    public string? Nome { get; set; }
 
+    public static Disciplina ParaEntidade(FormularioDisciplinaViewModel viewModel)
+    {
+        return new Disciplina(viewModel.Nome ?? string.Empty);
     }
+}
 
-    public class CadastrarDisciplinaViewModel : FormularioDisciplinaViewModel
+public class CadastrarDisciplinaViewModel : FormularioDisciplinaViewModel
+{
+    public CadastrarDisciplinaViewModel() { }
+
+    public CadastrarDisciplinaViewModel(string nome) : this()
     {
-        public CadastrarDisciplinaViewModel() { }
+        Nome = nome;
+    }
+}
 
-        public CadastrarDisciplinaViewModel(string nome) : this()
+public class EditarDisciplinaViewModel : FormularioDisciplinaViewModel
+{
+    public Guid Id { get; set; }
+
+    public EditarDisciplinaViewModel() { }
+
+    public EditarDisciplinaViewModel(Guid id, string nome) : this()
+    {
+        Id = id;
+        Nome = nome;
+    }
+}
+
+public class ExcluirDisciplinaViewModel
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; }
+
+    public ExcluirDisciplinaViewModel(Guid id, string nome)
+    {
+        Id = id;
+        Nome = nome;
+    }
+}
+
+public class VisualizarDisciplinasViewModel
+{
+    public List<DetalhesDisciplinaViewModel> Registros { get; set; }
+
+    public VisualizarDisciplinasViewModel(List<Disciplina> disciplinas)
+    {
+        Registros = new List<DetalhesDisciplinaViewModel>();
+
+        foreach (var d in disciplinas)
         {
-            Nome = nome;
-      
+            var detalhesVm = DetalhesDisciplinaViewModel.ParaDetalhesVm(d);
+
+            Registros.Add(detalhesVm);
         }
     }
+}
 
-    public class VisualizarDisciplinaViewModel
+public class DetalhesDisciplinaViewModel
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; }
+    public List<string> Materias { get; set; }
+
+    public DetalhesDisciplinaViewModel(Guid id, string nome, List<Materia> materias)
     {
-        public List<DetalhesDisciplinaViewModel> Registros { get; set; }
-
-        public VisualizarDisciplinaViewModel(List<Disciplina> categorias)
-        {
-            Registros = new List<DetalhesDisciplinaViewModel>();
-
-            foreach (var c in categorias)
-                Registros.Add(c.ParaDetalhesVM());
-        }
-    }
-    public class EditarDisciplinaViewMode : FormularioDisciplinaViewModel
-    {
-        public Guid Id { get; set; }
-
-        public EditarDisciplinaViewMode() { }
-
-        public EditarDisciplinaViewMode(
-            Guid id,
-            string nome
-       
-            ) : this()
-        {
-            Id = id;
-            Nome = nome;
-        }
+        Id = id;
+        Nome = nome;
+        Materias = materias.Select(m => m.Nome).ToList();
     }
 
-    public class ExcluirDisciplinaViewModel
+    public static DetalhesDisciplinaViewModel ParaDetalhesVm(Disciplina disciplina)
     {
-        public Guid Id { get; set; }
-        public string Nome { get; set; }
-
-        public ExcluirDisciplinaViewModel() { }
-
-        public ExcluirDisciplinaViewModel(Guid id, string nome) : this()
-        {
-            Id = id;
-            Nome = nome;
-        }
-    }
-
-    public class DetalhesDisciplinaViewModel
-    {
-        public Guid Id { get; set; }
-        public string Nome { get; set; }
-
-
-        public DetalhesDisciplinaViewModel(
-            Guid id,
-            string nome
-
-        )
-        {
-            Id = id;
-            Nome = nome;
-        }
-
+        return new DetalhesDisciplinaViewModel(disciplina.Id, disciplina.Nome, disciplina.Materias);
     }
 }

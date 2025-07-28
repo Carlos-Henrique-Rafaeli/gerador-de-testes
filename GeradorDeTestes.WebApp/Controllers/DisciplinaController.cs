@@ -23,11 +23,24 @@ public class DisciplinaController : Controller
         var resultado = disciplinaAppService.SelecionarTodos();
 
         if (resultado.IsFailed)
-            return RedirectToAction("Home/Index");
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
+            return RedirectToAction("erro", "home");
+        }
 
         var registros = resultado.Value;
 
-        var visualizarVM = new VisualizarDisciplinaViewModel(registros);
+        var visualizarVM = new VisualizarDisciplinasViewModel(registros);
 
         var existeNotificacao = TempData.TryGetValue(nameof(NotificacaoViewModel), out var valor);
 
@@ -37,7 +50,6 @@ public class DisciplinaController : Controller
 
             ViewData.Add(nameof(NotificacaoViewModel), notificacaoVm);
         }
-
 
         return View(visualizarVM);
     }
@@ -54,13 +66,20 @@ public class DisciplinaController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Cadastrar(CadastrarDisciplinaViewModel cadastrarVM)
     {
-        var entidade = cadastrarVM.ParaEntidade();
+        var entidade = FormularioDisciplinaViewModel.ParaEntidade(cadastrarVM);
 
         var resultado = disciplinaAppService.Cadastrar(entidade);
 
         if (resultado.IsFailed)
         {
-            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
+            foreach (var erro in resultado.Errors)
+            {
+                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
+                {
+                    ModelState.AddModelError("CadastroUnico", erro.Reasons[0].Message);
+                    break;
+                }
+            }
 
             return View(cadastrarVM);
         }
@@ -74,12 +93,25 @@ public class DisciplinaController : Controller
         var resultado = disciplinaAppService.SelecionarPorId(id);
 
         if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
             return RedirectToAction(nameof(Index));
+        }
 
         var registroSelecionado = resultado.Value;
 
-        var editarVM = new EditarDisciplinaViewMode(
-            registroSelecionado.Id,
+        var editarVM = new EditarDisciplinaViewModel(
+            id,
             registroSelecionado.Nome
         );
 
@@ -87,15 +119,23 @@ public class DisciplinaController : Controller
     }
 
     [HttpPost("editar/{id:guid}")]
-    public IActionResult Editar(Guid id, EditarDisciplinaViewMode editarVM)
+    [ValidateAntiForgeryToken]
+    public IActionResult Editar(Guid id, EditarDisciplinaViewModel editarVM)
     {
-        var entidadeEditada = editarVM.ParaEntidade();
+        var entidadeEditada = FormularioDisciplinaViewModel.ParaEntidade(editarVM);
 
         var resultado = disciplinaAppService.Editar(id, entidadeEditada);
 
         if (resultado.IsFailed)
         {
-            ModelState.AddModelError("CadastroUnico", resultado.Errors[0].Message);
+            foreach (var erro in resultado.Errors)
+            {
+                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
+                {
+                    ModelState.AddModelError("CadastroUnico", erro.Reasons[0].Message);
+                    break;
+                }
+            }
 
             return View(editarVM);
         }
@@ -109,16 +149,33 @@ public class DisciplinaController : Controller
         var resultado = disciplinaAppService.SelecionarPorId(id);
 
         if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
             return RedirectToAction(nameof(Index));
+        }
 
         var registroSelecionado = resultado.Value;
 
-        var excluirVM = new ExcluirDisciplinaViewModel(registroSelecionado.Id, registroSelecionado.Nome);
+        var excluirVM = new ExcluirDisciplinaViewModel(
+            registroSelecionado.Id,
+            registroSelecionado.Nome
+        );
 
         return View(excluirVM);
     }
 
     [HttpPost("excluir/{id:guid}")]
+    [ValidateAntiForgeryToken]
     public ActionResult ExcluirConfirmado(Guid id)
     {
         var resultado = disciplinaAppService.Excluir(id);
@@ -127,21 +184,13 @@ public class DisciplinaController : Controller
         {
             foreach (var erro in resultado.Errors)
             {
-                if (erro.Metadata["TipoErro"].ToString() == "RegistroDuplicado")
-                {
-                    var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
-                        erro.Message,
-                        erro.Reasons[0].Message
-                    );
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-                    TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
-
-                    break;
-                }
-                else
-                {
-                    return RedirectToAction("Home/Erro");
-                }
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
             }
         }
 

@@ -11,6 +11,7 @@ using GeradorDeTestes.Dominio.ModuloTeste;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloTeste;
 using QuestPDF.Infrastructure;
 using GeradorDeTestes.Aplicacao;
+using GeradorDeTestes.Aplicacao.ModuloMateria;
 
 namespace GeradorDeTestes.WebApp
 {
@@ -28,6 +29,7 @@ namespace GeradorDeTestes.WebApp
             });
 
             builder.Services.AddScoped<DisciplinaAppService>();
+            builder.Services.AddScoped<MateriaAppService>();
             builder.Services.AddScoped<IRepositorioMateria, RepositorioMateriaEmOrm>();
             builder.Services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
             builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
