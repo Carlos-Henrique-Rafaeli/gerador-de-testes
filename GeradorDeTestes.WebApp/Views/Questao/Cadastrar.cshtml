@@ -3,8 +3,6 @@
 @{
     Layout = "_Layout";
     ViewBag.Titulo = "Cadastro de Questão";
-
-    bool temAlternativaCorreta = Model.Alternativas.Any(a => a.Correta);
 }
 
 <hr />
@@ -35,68 +33,88 @@
                     </div>
 
                     <h4 class="my-3">Alternativas</h4>
-                    
-                    @if (Model.Alternativas.Count < 4)
-                    {
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <div class="col-12 col-md-7">
-                                <label class="control-label">Alternativa: </label>
-                                <input name="Resposta" class="form-control" />
-                            </div>
 
-                            @if (!temAlternativaCorreta)
-                            {
+                    <div class="row align-items-end g-3 mt-3">
+                        <div class="col">
+                            <label for="Resposta" class="form-label">Resposta:</label>
+
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" name="Resposta" class="form-control" />
+
                                 <span class="d-flex gap-2">
                                     @Html.CheckBox("Correta", false, new { @class = "form-check-input" })
                                     <label for="Correta" class="form-check-label">Correta</label>
                                 </span>
-                            }
-
-                            <button type="submit" formaction="/questoes/cadastrar/adicionar-alternativa" class="btn btn-primary align-self-end col">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-outline-primary w-100"
+                                    type="submit"
+                                    formaction="/questoes/cadastrar/adicionar-alternativa">
                                 Adicionar
                             </button>
                         </div>
-                    }
+                    </div>
 
-                    @for (var i = 0; i < Model.Alternativas.Count; i++)
+                    @for (int i = 0; i < Model.AlternativasSelecionadas.Count; i++)
                     {
-                        <input type="hidden" asp-for="Alternativas[@i].Letra"/>
-                        <input type="hidden" asp-for="Alternativas[@i].Resposta" />
-                        <input type="hidden" asp-for="Alternativas[@i].Correta" />
+                        <input type="hidden" asp-for="AlternativasSelecionadas[@i].Letra" />
+                        <input type="hidden" asp-for="AlternativasSelecionadas[@i].Resposta" />
+                        <input type="hidden" asp-for="AlternativasSelecionadas[@i].Correta" />
                     }
 
-                    <table class="table table-sm table-striped mt-3">
-                        <thead>
-                            <tr>
-                                <th>Resposta</th>
-                                <th>Correta</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var i in Model.Alternativas)
-                            {
-                                <tr>
-                                    <td>@i.Resposta</td>
 
-                                    <td>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <div class="form-check">
-                                                <input class="form-check-input" readonly disabled type="checkbox" @(i.Correta ? "checked" : "") >
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button class="btn btn-sm btn-danger" type="submit" formaction="/questoes/cadastrar/remover-alternativa/@i.Letra">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                    @if (Model.AlternativasSelecionadas.Any())
+                    {
+                        <div class="table-responsive mt-4">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Letra</th>
+                                        <th>Resposta</th>
+                                        <th>Correta</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.AlternativasSelecionadas.Count; i++)
+                                    {
+                                        <tr>
+                                            <td valign="middle" style="width: 75px;">
+                                                @Model.AlternativasSelecionadas[i].Letra)
+                                                <input type="hidden"
+                                                       name="AlternativasSelecionadas[@i].Letra"
+                                                       value="@Model.AlternativasSelecionadas[i].Letra" />
+                                            </td>
+                                            <td valign="middle">
+                                                @Model.AlternativasSelecionadas[i].Resposta
+                                                <input type="hidden"
+                                                       name="AlternativasSelecionadas[@i].Resposta"
+                                                       value="@Model.AlternativasSelecionadas[i].Resposta" />
+                                            </td>
+                                            <td valign="middle" style="width: 75px;">
+                                                @(Model.AlternativasSelecionadas[i].Correta ? "Sim" : "Não")
+                                                <input type="hidden"
+                                                       name="AlternativasSelecionadas[@i].Correta"
+                                                       value="@Model.AlternativasSelecionadas[i].Correta" />
+                                            </td>
+                                            <td valign="middle" align="center" style="width: 50px;">
+                                                <button class="btn btn-sm btn-outline-danger rounded"
+                                                        type="submit"
+                                                        formaction="/questoes/cadastrar/remover-alternativa/@Model.AlternativasSelecionadas[i].Letra">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mt-4">Nenhuma alternativa adicionada.</p>
+                    }
 
                     <div class="form-group d-flex align-items-center justify-content-end gap-3 mt-5">
                         <a href="/questoes">Voltar para a listagem</a>

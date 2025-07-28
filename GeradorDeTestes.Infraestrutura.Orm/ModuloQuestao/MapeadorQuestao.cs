@@ -8,18 +8,23 @@ public class MapeadorQuestao : IEntityTypeConfiguration<Questao>
 {
     public void Configure(EntityTypeBuilder<Questao> builder)
     {
-        builder.Property(x => x.Id)
+        builder.Property(q => q.Id)
             .ValueGeneratedNever()
             .IsRequired();
 
-        builder.HasOne(x => x.Materia)
-            .WithMany(x => x.Questoes);
-
-        builder.Property(x => x.Enunciado)
-            .HasMaxLength(300)
+        builder.Property(q => q.Enunciado)
+            .HasMaxLength(500)
             .IsRequired();
 
-        builder.HasMany(x => x.Alternativas)
-            .WithOne(x => x.Questao);
+        builder.Property(q => q.UtilizadaEmTeste)
+            .IsRequired();
+
+        builder.HasOne(q => q.Materia)
+            .WithMany(m => m.Questoes)
+            .IsRequired();
+
+        builder.HasMany(q => q.Alternativas)
+            .WithOne(a => a.Questao);
     }
 }
+

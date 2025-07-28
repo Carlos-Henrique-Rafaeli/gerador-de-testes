@@ -4,15 +4,18 @@ namespace GeradorDeTestes.Dominio.ModuloQuestao;
 
 public class Alternativa : EntidadeBase<Alternativa>
 {
+    public char Letra { get; set; }
     public string Resposta { get; set; }
     public bool Correta { get; set; }
     public Questao Questao { get; set; }
 
     public Alternativa() { }
 
-    public Alternativa(string resposta, bool correta) : this()
+    public Alternativa(char letra, string resposta, bool correta, Questao questao) : this()
     {
+        Letra = letra;
         Resposta = resposta;
+        Questao = questao;
         Correta = correta;
     }
 

@@ -8,19 +8,22 @@ public class MapeadorAlternativa : IEntityTypeConfiguration<Alternativa>
 {
     public void Configure(EntityTypeBuilder<Alternativa> builder)
     {
-        builder.Property(x => x.Id)
+        builder.Property(a => a.Id)
             .ValueGeneratedNever()
             .IsRequired();
 
-        builder.Property(x => x.Resposta)
+        builder.Property(a => a.Letra)
+            .IsRequired();
+
+        builder.Property(a => a.Resposta)
             .HasMaxLength(300)
             .IsRequired();
 
-        builder.Property(x => x.Correta)
+        builder.Property(a => a.Correta)
             .IsRequired();
 
-        builder.HasOne(x => x.Questao)
-            .WithMany(x => x.Alternativas)
+        builder.HasOne(a => a.Questao)
+            .WithMany(q => q.Alternativas)
             .IsRequired();
     }
 }

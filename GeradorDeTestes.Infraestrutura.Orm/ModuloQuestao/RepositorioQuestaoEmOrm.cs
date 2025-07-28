@@ -1,4 +1,5 @@
-﻿using GeradorDeTestes.Dominio.ModuloQuestao;
+﻿using GeradorDeTestes.Dominio.ModuloMateria;
+using GeradorDeTestes.Dominio.ModuloQuestao;
 using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,19 +9,41 @@ public class RepositorioQuestaoEmOrm : RepositorioBaseEmOrm<Questao>, IRepositor
 {
     public RepositorioQuestaoEmOrm(GeradorDeTestesDbContext contexto) : base(contexto) { }
 
-    public override Questao? SelecionarRegistroPorId(Guid idRegistro)
+    public List<Questao> SelecionarQuestoesPorDisciplinaESerie(Guid disciplinaId, Serie serie, int quantidadeQuestoes)
     {
         return registros
             .Include(q => q.Alternativas)
             .Include(q => q.Materia)
-            .FirstOrDefault(q => q.Id.Equals(idRegistro));
+            .ThenInclude(m => m.Disciplina)
+            .Where(x => x.Materia.Disciplina.Id.Equals(disciplinaId))
+            .Where(x => x.Materia.Serie.Equals(serie))
+            .Take(quantidadeQuestoes)
+            .ToList();
+    }
+
+    public List<Questao> SelecionarQuestoesPorMateria(Guid materiaId, int quantidadeQuestoes)
+    {
+        return registros
+            .Include(q => q.Alternativas)
+            .Include(q => q.Materia)
+            .Where(x => x.Materia.Id.Equals(materiaId))
+            .Take(quantidadeQuestoes)
+            .ToList();
+    }
+
+    public override Questao? SelecionarRegistroPorId(Guid idRegistro)
+    {
+        return registros
+            .Include(x => x.Alternativas)
+            .Include(x => x.Materia)
+            .FirstOrDefault(x => x.Id.Equals(idRegistro));
     }
 
     public override List<Questao> SelecionarRegistros()
     {
         return registros
-            .Include(q => q.Alternativas)
-            .Include(q => q.Materia)
+            .Include(x => x.Alternativas)
+            .Include(x => x.Materia)
             .ToList();
     }
 }
