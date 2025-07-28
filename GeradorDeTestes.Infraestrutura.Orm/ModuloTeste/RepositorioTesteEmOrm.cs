@@ -14,16 +14,22 @@ public class RepositorioTesteEmOrm : RepositorioBaseEmOrm<Teste>, IRepositorioTe
     public override Teste? SelecionarRegistroPorId(Guid idRegistro)
     {
         return registros
-            .Include(q => q.Disciplina)
-            .Include(q => q.Materia)
-            .FirstOrDefault(q => q.Id.Equals(idRegistro));
+            .Include(t => t.Questoes)
+            .ThenInclude(q => q.Alternativas)
+            .Include(t => t.Questoes)
+            .ThenInclude(q => q.Materia)
+            .Include(t => t.Disciplina)
+            .Include(t => t.Materia)
+            .FirstOrDefault(x => x.Id.Equals(idRegistro));
     }
 
     public override List<Teste> SelecionarRegistros()
     {
         return registros
-            .Include(q => q.Disciplina)
-            .Include(q => q.Materia)
+            .Include(t => t.Questoes)
+            .ThenInclude(q => q.Materia)
+            .Include(t => t.Disciplina)
+            .Include(t => t.Materia)
             .ToList();
     }
 }

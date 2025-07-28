@@ -95,13 +95,13 @@ public class QuestaoAppService
         {
             var testes = repositorioTeste.SelecionarRegistros();
 
-            //if (testes.Any(t => t.Questoes.Any(q => q.Id == id)))
-            //{
-            //    var erro = ErrorResults
-            //        .ExclusaoBloqueadaErro("A questão não pôde ser excluída pois está em um ou mais testes ativos.");
+            if (testes.Any(t => t.Questoes.Any(q => q.Id == id)))
+            {
+                var erro = ErrorResults
+                    .ExclusaoBloqueadaErro("A questão não pôde ser excluída pois está em um ou mais testes ativos.");
 
-            //    return Result.Fail(erro);
-            //}
+                return Result.Fail(erro);
+            }
 
             repositorioQuestao.ExcluirRegistro(id);
 

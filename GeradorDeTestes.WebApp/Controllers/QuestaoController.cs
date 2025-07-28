@@ -1,9 +1,5 @@
 ﻿using GeradorDeTestes.Aplicacao.ModuloMateria;
 using GeradorDeTestes.Aplicacao.ModuloQuestao;
-using GeradorDeTestes.Dominio.ModuloMateria;
-using GeradorDeTestes.Dominio.ModuloQuestao;
-using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
-using GeradorDeTestes.WebApp.Extensions;
 using GeradorDeTestes.WebApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

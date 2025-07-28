@@ -7,30 +7,101 @@ namespace GeradorDeTestes.Dominio.ModuloTeste;
 
 public class Teste : EntidadeBase<Teste>
 {
+    public DateTime DataGeracao { get; set; }
     public string Titulo { get; set; }
+    public bool Recuperacao { get; set; }
+    public int QuantidadeQuestoes { get; set; }
     public Disciplina Disciplina { get; set; }
     public Materia? Materia { get; set; }
     public Serie Serie { get; set; }
-    public int QuantidadeQuestoes { get; set; }
-    public TipoTeste TipoTeste {  get; set; }
-    
-    public Teste () { }
+    public List<Questao> Questoes { get; set; } = new List<Questao>();
 
-    public Teste (
+    public Teste() { }
+
+    public Teste(
         string titulo,
-        Disciplina disciplina,
-        Materia materia,
-        Serie serie,
+        bool recuperacao,
         int quantidadeQuestoes,
-        TipoTeste tipoTeste
-    )
+        Serie serieMateria,
+        Disciplina disciplina,
+        Materia? materia
+    ) : this()
     {
+        DataGeracao = DateTime.UtcNow;
+
         Titulo = titulo;
+        Recuperacao = recuperacao;
+        QuantidadeQuestoes = quantidadeQuestoes;
+        Serie = serieMateria;
         Disciplina = disciplina;
         Materia = materia;
-        Serie = serie;
+    }
+
+    public Teste(
+        string titulo,
+        bool recuperacao,
+        int quantidadeQuestoes,
+        Serie serieMateria,
+        Disciplina disciplina,
+        Materia? materia,
+        List<Questao> questoes
+    ) : this()
+    {
+        DataGeracao = DateTime.UtcNow;
+
+        Titulo = titulo;
+        Recuperacao = recuperacao;
         QuantidadeQuestoes = quantidadeQuestoes;
-        TipoTeste = tipoTeste;
+        Serie = serieMateria;
+        Disciplina = disciplina;
+        Materia = materia;
+
+        foreach (var questao in questoes)
+            AdicionarQuestao(questao);
+    }
+
+    public List<Questao>? SortearQuestoes()
+    {
+        RemoverQuestoesAtuais();
+
+        var questoesSorteadas = new List<Questao>(QuantidadeQuestoes);
+
+        if (Recuperacao)
+            questoesSorteadas = Disciplina.ObterQuestoesAleatorias(QuantidadeQuestoes, Serie);
+        else
+            questoesSorteadas = Materia?.ObterQuestoesAleatorias(QuantidadeQuestoes);
+
+        if (questoesSorteadas is not null)
+        {
+            foreach (Questao q in questoesSorteadas)
+                AdicionarQuestao(q);
+        }
+
+        return questoesSorteadas;
+    }
+
+    public void AdicionarQuestao(Questao questao)
+    {
+        questao.UtilizadaEmTeste = true;
+
+        Questoes.Add(questao);
+    }
+
+    public void RemoverQuestao(Questao questao)
+    {
+        questao.UtilizadaEmTeste = false;
+
+        Questoes.Remove(questao);
+    }
+
+    public void RemoverQuestoesAtuais()
+    {
+        for (int i = 0; i < Questoes.Count; i++)
+        {
+            var questao = Questoes[i];
+
+            RemoverQuestao(questao);
+        }
     }
 
     public override void AtualizarRegistro(Teste registroEditado)
@@ -38,8 +109,7 @@ public class Teste : EntidadeBase<Teste>
         Titulo = registroEditado.Titulo;
         Disciplina = registroEditado.Disciplina;
         Materia = registroEditado.Materia;
-        Serie = registroEditado.Serie;
-        QuantidadeQuestoes = registroEditado.QuantidadeQuestoes;
-        TipoTeste = registroEditado.TipoTeste;
+        Questoes = registroEditado.Questoes;
+        Recuperacao = registroEditado.Recuperacao;
     }
 }

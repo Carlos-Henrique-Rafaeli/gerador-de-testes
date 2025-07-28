@@ -13,27 +13,43 @@ public class Materia : EntidadeBase<Materia>
     public List<Questao> Questoes { get; set; }
     public List<Teste> Testes { get; set; }
 
-    public Materia() { }
-
-    public Materia(
-        string nome,
-        Disciplina disciplina,
-        Serie serie
-    )
+    protected Materia()
     {
-        Nome = nome;
-        Disciplina = disciplina;
-        Serie = serie;
+        Questoes = new List<Questao>();
+        Testes = new List<Teste>();
     }
 
-    public Materia(
-        Guid id,
-        string nome,
-        Disciplina disciplina,
-        Serie serie
-    ) : this(nome, disciplina, serie)
+    public Materia(string nome, Serie serie, Disciplina disciplina) : this()
     {
-        Id = id;
+        Nome = nome;
+        Serie = serie;
+        Disciplina = disciplina;
+    }
+
+    public void AdicionarQuestao(Questao questao)
+    {
+        if (Questoes.Contains(questao))
+            return;
+
+        Questoes.Add(questao);
+    }
+
+    public void RemoverQuestao(Questao questao)
+    {
+        if (!Questoes.Contains(questao))
+            return;
+
+        Questoes.Remove(questao);
+    }
+
+    public List<Questao> ObterQuestoesAleatorias(int quantidadeQuestoes)
+    {
+        var random = new Random();
+
+        return Questoes
+            .OrderBy(q => random.Next())
+            .Take(quantidadeQuestoes)
+            .ToList();
     }
 
     public override void AtualizarRegistro(Materia registroEditado)

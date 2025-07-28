@@ -21,7 +21,6 @@ public class Questao : EntidadeBase<Questao>
 
     public Questao(string enunciado, Materia materia) : this()
     {
-        Id = Guid.NewGuid();
         Enunciado = enunciado;
         Materia = materia;
         UtilizadaEmTeste = false;

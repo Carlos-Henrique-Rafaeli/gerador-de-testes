@@ -13,69 +13,87 @@
                 <h3>Detalhes</h3>
 
                 <div class="form-group d-grid gap-2 mt-3">
-                    <label class="control-label fs-5">Id:</label>
-                    <input class="form-control" value="@Model.Id" readonly disabled />
+                    <label for="Título" class="control-label fs-5">Data de Geração:</label>
+                    <input name="Nome" class="form-control" value="@Model.DataGeracao" readonly disabled />
+                </div>
+
+
+                <div class="form-group d-grid gap-2 mt-3">
+                    <label for="Título" class="control-label fs-5">Título:</label>
+                    <input name="Nome" class="form-control" value="@Model.Titulo" readonly disabled />
                 </div>
 
                 <div class="form-group d-grid gap-2 mt-3">
-                    <label class="control-label fs-5">Título:</label>
-                    <input class="form-control" value="@Model.Titulo" readonly disabled />
+                    <label for="Disciplina" class="control-label fs-5">Disciplina:</label>
+                    <input name="Disciplina" class="form-control" value="@Model.Disciplina" readonly disabled />
                 </div>
 
-                <div class="form-group d-grid gap-2 mt-3">
-                    <label class="control-label fs-5">Disciplina:</label>
-                    <input class="form-control" value="@Model.Disciplina" readonly disabled />
-                </div>
-
-                <div class="form-group d-grid gap-2 mt-3">
-                    <label class="control-label fs-5">Matéria:</label>
-                    <input class="form-control" value="@Model.Materia" readonly disabled />
-                </div>
-
-                <div class="form-group d-grid gap-2 mt-3">
-                    <label class="control-label fs-5">Série:</label>
-                    <input class="form-control" value="@Model.Serie" readonly disabled />
-                </div>
-
-                <div class="mt-5">
-                    <h5>Questões Sorteadas:</h5>
-                    <ul class="list-group">
-                        @foreach (var questao in Model.QuestoesSorteadas)
-                        {
-                            <li class="list-group-item">
-                                <strong>@questao.Enunciado</strong>
-                                <ul class="mt-2">
-                                    @{
-                                        var letras = new[] { "a)", "b)", "c)", "d)", "e)", "f)", "g)", "h)" };
-                                        int i = 0;
-                                    }
-                                    @foreach (var alternativa in questao.Alternativas)
-                                    {
-                                        <li>@letras[i] @alternativa.Resposta</li>
-                                        i++;
-                                    }
-                                </ul>
-                            </li>
-                        }
-                    </ul>
-                </div>
-
-                <div class="form-group d-flex align-items-center justify-content-between gap-3 mt-5">
-                    <a href="/testes">Voltar para a listagem</a>
-
-                    <div class="d-flex gap-2">
-                        <a href="/testes/gerar-pdf/@Model.Id" class="btn btn-outline-primary" target="_blank">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                            Gerar PDF
-                        </a>
-
-                        <a href="/testes/gerar-pdf-com-gabarito/@Model.Id" class="btn btn-primary" target="_blank">
-                            <i class="bi bi-file-earmark-check"></i>
-                            PDF com Gabarito
-                        </a>
+                @if (Model.Materia is not null)
+                {
+                    <div class="form-group d-grid gap-2 mt-3">
+                        <label for="Materia" class="control-label fs-5">Matéria:</label>
+                        <input name="Materia" class="form-control" value="@Model.Materia" readonly disabled />
                     </div>
+                }
+
+                <div class="form-group d-grid gap-2 mt-3">
+                    <label for="Serie" class="control-label fs-5">Série:</label>
+                    <input name="Serie" class="form-control" value="@Model.Serie" readonly disabled />
                 </div>
 
+                <div class="form-group d-grid gap-2 mt-3">
+                    <label for="Recuperacao" class="control-label fs-5">Recuperação:</label>
+                    <input name="Recuperacao" class="form-control" value="@Model.Recuperacao" readonly disabled />
+                </div>
+
+                @if (Model.QuestoesSorteadas.Count > 0)
+                {
+                    <label for="QuestoesSorteadas" class="control-label fs-5 mt-4">Questões:</label>
+
+                    <div class="table-responsive mt-4">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Matéria</th>
+                                    <th>Enunciado</th>
+                                    <th>Resposta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var q in Model.QuestoesSorteadas)
+                                {
+                                    <tr>
+                                        <td valign="middle" style="width: 75px;">
+                                            @q.Materia
+                                        </td>
+                                        <td valign="middle" style="width: 75px;">
+                                            @q.Enunciado
+                                        </td>
+                                        <td valign="middle" style="width: 75px;">
+                                            @q.RespostaCorreta
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <div class="d-flex flex-wrap align-items-center justify-content-lg-end gap-2 mt-3">
+                    <a asp-action="GerarPdf" asp-route-id="@Model.Id" target="_blank" class="col-lg-5 col-xl-3 btn btn-outline-primary rounded-3 px-2">
+                        <i class="bi bi-filetype-pdf"></i>
+                        Imprimir Teste
+                    </a>
+                    <a asp-action="GerarPdfGabarito" asp-route-id="@Model.Id" target="_blank" class="col-lg-5 col-xl-4 btn btn-primary rounded-3 px-2">
+                        <i class="bi bi-filetype-pdf"></i>
+                        Imprimir Gabarito
+                        <i class="bi bi-check"></i>
+                    </a>
+                </div>
+
+                <div class="row align-items-center text-end gap-3 mt-4">
+                    <a asp-action="Index">Voltar para a listagem</a>
+                </div>
             </div>
         </div>
     </div>

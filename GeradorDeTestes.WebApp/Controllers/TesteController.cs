@@ -1,202 +1,207 @@
-﻿using GeradorDeTestes.Dominio.ModuloDisciplina;
-using GeradorDeTestes.Dominio.ModuloMateria;
-using GeradorDeTestes.Dominio.ModuloQuestao;
-using GeradorDeTestes.Dominio.ModuloTeste;
-using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
+﻿using GeradorDeTestes.Aplicacao;
+using GeradorDeTestes.Aplicacao.ModuloMateria;
+using GeradorDeTestes.Aplicacao.ModuloQuestao;
+using GeradorDeTestes.Aplicacao.ModuloTeste;
+using GeradorDeTestes.Dominio.Extensions;
 using GeradorDeTestes.WebApp.Extensions;
 using GeradorDeTestes.WebApp.Models;
-using GeradorDeTestes.WebApp.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Text.Json;
 
 namespace GeradorDeTestes.WebApp.Controllers;
 
 [Route("testes")]
 public class TesteController : Controller
 {
-    public GeradorDeTestesDbContext contexto;
-    public IRepositorioTeste repositorioTeste;
-    public IRepositorioDisciplina repositorioDisciplina;
-    public IRepositorioMateria repositorioMateria;
-    public IRepositorioQuestao repositorioQuestao;
+    private readonly TesteAppService testeAppService;
+    private readonly QuestaoAppService questaoAppService;
+    private readonly MateriaAppService materiaAppService;
+    private readonly DisciplinaAppService disciplinaAppService;
 
-    public TesteController (
-        GeradorDeTestesDbContext contexto, 
-        IRepositorioTeste repositorioTeste, 
-        IRepositorioDisciplina repoitorioDisciplina,
-        IRepositorioMateria repositorioMateria, 
-        IRepositorioQuestao repositorioQuestao
+    public TesteController(
+        TesteAppService testeAppService,
+        QuestaoAppService questaoAppService,
+        MateriaAppService materiaAppService,
+        DisciplinaAppService disciplinaAppService
     )
     {
-        this.contexto = contexto;
-        this.repositorioTeste = repositorioTeste;
-        this.repositorioDisciplina = repoitorioDisciplina;
-        this.repositorioMateria = repositorioMateria;
-        this.repositorioQuestao = repositorioQuestao;
+        this.testeAppService = testeAppService;
+        this.questaoAppService = questaoAppService;
+        this.materiaAppService = materiaAppService;
+        this.disciplinaAppService = disciplinaAppService;
     }
 
+    [HttpGet]
     public IActionResult Index()
     {
-        var registros = repositorioTeste.SelecionarRegistros();
+        var resultado = testeAppService.SelecionarTodos();
 
-        var visualizarVM = new VisualizarTestesViewModel(registros);
+        if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-        return View(visualizarVM);
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
+            return RedirectToAction("erro", "home");
+        }
+
+        var visualizarVm = new VisualizarTestesViewModel(resultado.ValueOrDefault);
+
+        var existeNotificacao = TempData.TryGetValue(nameof(NotificacaoViewModel), out var valor);
+
+        if (existeNotificacao && valor is string jsonString)
+        {
+            var notificacaoVm = JsonSerializer.Deserialize<NotificacaoViewModel>(jsonString);
+
+            ViewData.Add(nameof(NotificacaoViewModel), notificacaoVm);
+        }
+
+        return View(visualizarVm);
     }
 
-    [HttpGet("gerar")]
-    public IActionResult Gerar()
+    [HttpGet("gerar/primeira-etapa")]
+    public IActionResult PrimeiraEtapaGerar()
     {
-        var gerarVM = new GerarTesteViewModel
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+
+        var primeiraEtapaVm = new PrimeiraEtapaGerarTesteViewModel
         {
-            Disciplinas = repositorioDisciplina.SelecionarRegistros(),
-            Materias = repositorioMateria.SelecionarRegistros()
+            DisciplinasDisponiveis = disciplinas
+                .Select(d => new SelectListItem(d.Nome, d.Id.ToString()))
+                .ToList()
         };
 
-        return View(gerarVM);
+        return View(primeiraEtapaVm);
     }
 
-    [HttpPost("gerar")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Gerar(GerarTesteViewModel gerarVM)
+    [HttpPost("gerar/primeira-etapa")]
+    public IActionResult PrimeiraEtapaGerar(PrimeiraEtapaGerarTesteViewModel primeiraEtapaVm)
     {
-        var registros = repositorioTeste.SelecionarRegistros();
+        var registros = testeAppService.SelecionarTodos().ValueOrDefault;
 
-        if (registros.Any(x => x.Titulo.Equals(gerarVM.Titulo)))
-            ModelState.AddModelError("CadastroUnico", "Já existe um registro registrado com este título.");
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
 
-        var disciplinas = repositorioDisciplina.SelecionarRegistros();
-        var materias = repositorioMateria.SelecionarRegistros();
-
-        if (!ModelState.IsValid)
+        if (registros.Any(i => i.Titulo.Equals(primeiraEtapaVm.Titulo)))
         {
-            gerarVM.Disciplinas = disciplinas;
-            gerarVM.Materias = materias;
-            return View(gerarVM);
+            ModelState.AddModelError(
+                "CadastroUnico",
+                "Já existe um teste registrado com este nome."
+            );
+
+            primeiraEtapaVm.DisciplinasDisponiveis = disciplinas
+                .Select(d => new SelectListItem(d.Nome, d.Id.ToString()))
+                .ToList();
+
+            return View(primeiraEtapaVm);
         }
 
-        var entidade = gerarVM.ParaEntidade(disciplinas, materias);
+        var disciplinaSelecionada = disciplinaAppService.SelecionarPorId(primeiraEtapaVm.DisciplinaId).Value;
 
-        var transacao = contexto.Database.BeginTransaction();
+        if (disciplinaSelecionada is null)
+            return RedirectToAction(nameof(Index));
 
-        try
-        {
-            repositorioTeste.CadastrarRegistro(entidade);
-
-            contexto.SaveChanges();
-
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-            throw;
-        }
-
-        return RedirectToAction(nameof(Index));
-    }
-
-
-    [HttpPost("preview")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Preview(GerarTesteViewModel gerarVM)
-    {
-        var questoes = repositorioQuestao.SelecionarRegistros()
-            .Where(q =>
-                q.Materia.Id == gerarVM.MateriaId &&
-                q.Materia.Serie == gerarVM.Serie)
+        var materias = materiaAppService
+            .SelecionarTodos()
+            .ValueOrDefault
+            .Where(m => m.Disciplina.Equals(disciplinaSelecionada))
+            .Where(m => m.Serie.Equals(primeiraEtapaVm.Serie))
             .ToList();
 
-        if (gerarVM.QuantidadeQuestoes > questoes.Count)
-        {
-            ModelState.AddModelError(nameof(gerarVM.QuantidadeQuestoes), "Quantidade maior do que o número de questões disponíveis.");
-        }
+        var segundaEtapaVm = PrimeiraEtapaGerarTesteViewModel.AvancarEtapa(
+            primeiraEtapaVm,
+            disciplinaSelecionada,
+            materias
+        );
 
-        gerarVM.Disciplinas = repositorioDisciplina.SelecionarRegistros();
-        gerarVM.Materias = repositorioMateria.SelecionarRegistros();
+        var jsonString = JsonSerializer.Serialize(segundaEtapaVm);
 
-        gerarVM.QuestoesSorteadas = questoes.OrderBy(_ => Guid.NewGuid())
-                                            .Take(gerarVM.QuantidadeQuestoes)
-                                            .ToList();
+        TempData.Add(nameof(SegundaEtapaGerarTesteViewModel), jsonString);
 
-        return View("Gerar", gerarVM);
+        return RedirectToAction(nameof(SegundaEtapaGerar));
     }
 
-    [HttpGet("duplicar/{id:guid}")]
-    public IActionResult Duplicar(Guid id)
+    [HttpGet("gerar/segunda-etapa")]
+    public IActionResult SegundaEtapaGerar()
     {
-        Teste? registro = repositorioTeste.SelecionarRegistroPorId(id);
+        var conseguiuRecuperar = TempData
+            .TryGetValue(nameof(SegundaEtapaGerarTesteViewModel), out var value);
 
-        var disciplinas = repositorioDisciplina.SelecionarRegistros();
-        var materias = repositorioMateria.SelecionarRegistros();
+        if (!conseguiuRecuperar || value is not string jsonString)
+            return RedirectToAction(nameof(Index));
 
-        var duplicarVM = new DuplicarTesteViewModel(registro);
+        var segundaEtapaVm = JsonSerializer.Deserialize<SegundaEtapaGerarTesteViewModel>(jsonString);
 
-        duplicarVM.Disciplinas = disciplinas;
-        duplicarVM.Materias = materias;
-
-        return View(duplicarVM);
+        return View(segundaEtapaVm);
     }
 
-    [HttpPost("duplicar/preview")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Preview(DuplicarTesteViewModel duplicarVM)
+    [HttpPost("gerar/segunda-etapa/sortear-questoes")]
+    public IActionResult SortearQuestoes(SegundaEtapaGerarTesteViewModel segundaEtapaVm)
     {
-        var questoes = repositorioQuestao.SelecionarRegistros()
-            .Where(q =>
-                q.Materia.Id == duplicarVM.MateriaId &&
-                q.Materia.Serie == duplicarVM.Serie)
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+        var materias = materiaAppService.SelecionarTodos().ValueOrDefault;
+        var questoes = questaoAppService.SelecionarTodos().ValueOrDefault;
+
+        var entidade = SegundaEtapaGerarTesteViewModel.ParaEntidade(
+            segundaEtapaVm,
+            disciplinas,
+            materias,
+            questoes
+        );
+
+        var questoesSorteadas = entidade.SortearQuestoes();
+
+        if (questoesSorteadas is null)
+            return RedirectToAction(nameof(Index));
+
+        segundaEtapaVm.QuestoesSorteadas = questoesSorteadas
+            .Select(DetalhesQuestaoViewModel.ParaDetalhesVm)
             .ToList();
 
-        if (duplicarVM.QuantidadeQuestoes > questoes.Count)
-        {
-            ModelState.AddModelError(nameof(duplicarVM.QuantidadeQuestoes), "Quantidade maior do que o número de questões disponíveis.");
-        }
+        segundaEtapaVm.MateriasDisponiveis = materias
+            .Where(m => m.Disciplina.Id.Equals(segundaEtapaVm.DisciplinaId))
+            .Where(m => m.Serie.Equals(segundaEtapaVm.Serie))
+            .Select(m => new SelectListItem(m.Nome, m.Id.ToString()))
+            .ToList();
 
-        duplicarVM.Disciplinas = repositorioDisciplina.SelecionarRegistros();
-        duplicarVM.Materias = repositorioMateria.SelecionarRegistros();
-
-        duplicarVM.QuestoesSorteadas = questoes.OrderBy(_ => Guid.NewGuid())
-                                            .Take(duplicarVM.QuantidadeQuestoes)
-                                            .ToList();
-
-        return View("Duplicar", duplicarVM);
+        return View(nameof(SegundaEtapaGerar), segundaEtapaVm);
     }
 
-    [HttpPost("duplicar")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Duplicar(DuplicarTesteViewModel duplicarVM)
+    [HttpPost("gerar/confirmar")]
+    public IActionResult ConfirmarGeracao(SegundaEtapaGerarTesteViewModel segundaEtapaVm)
     {
-        var registros = repositorioTeste.SelecionarRegistros();
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+        var materias = materiaAppService.SelecionarTodos().ValueOrDefault;
+        var questoes = questaoAppService.SelecionarTodos().ValueOrDefault;
 
-        if (registros.Any(x => x.Titulo.Equals(duplicarVM.Titulo)))
-            ModelState.AddModelError("CadastroUnico", "Já existe um registro registrado com este título.");
+        var entidade = SegundaEtapaGerarTesteViewModel.ParaEntidade(
+            segundaEtapaVm,
+            disciplinas,
+            materias,
+            questoes
+        );
 
-        var disciplinas = repositorioDisciplina.SelecionarRegistros();
-        var materias = repositorioMateria.SelecionarRegistros();
+        var resultado = testeAppService.Cadastrar(entidade);
 
-        if (!ModelState.IsValid)
+        if (resultado.IsFailed)
         {
-            duplicarVM.Disciplinas = disciplinas;
-            duplicarVM.Materias = materias;
-            return View(duplicarVM);
-        }
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-        var entidade = duplicarVM.ParaEntidade(disciplinas, materias);
-
-        var transacao = contexto.Database.BeginTransaction();
-
-        try
-        {
-            repositorioTeste.CadastrarRegistro(entidade);
-
-            contexto.SaveChanges();
-
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-            throw;
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
         }
 
         return RedirectToAction(nameof(Index));
@@ -205,133 +210,221 @@ public class TesteController : Controller
     [HttpGet("excluir/{id:guid}")]
     public IActionResult Excluir(Guid id)
     {
-        var registro = repositorioTeste.SelecionarRegistroPorId(id);
+        var resultado = testeAppService.SelecionarPorId(id);
 
-        if (registro is null)
+        if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
             return RedirectToAction(nameof(Index));
+        }
 
-        var excluirVM = new ExcluirTesteViewModel(registro.Id, registro.Titulo);
+        var registro = resultado.Value;
+
+        var excluirVM = new ExcluirTesteViewModel(
+            registro.Id,
+            registro.Titulo
+        );
 
         return View(excluirVM);
     }
 
     [HttpPost("excluir/{id:guid}")]
     [ValidateAntiForgeryToken]
-    public IActionResult Excluir(Guid id, ExcluirTesteViewModel excluirVM)
+    public IActionResult ExcluirConfirmado(Guid id)
     {
-        var transacao = contexto.Database.BeginTransaction();
+        var resultado = testeAppService.Excluir(id);
 
-        try
+        if (resultado.IsFailed)
         {
-            repositorioTeste.ExcluirRegistro(id);
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
 
-            contexto.SaveChanges();
-
-            transacao.Commit();
-        }
-        catch (Exception)
-        {
-            transacao.Rollback();
-
-            throw;
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
         }
 
         return RedirectToAction(nameof(Index));
     }
 
-
     [HttpGet("detalhes/{id:guid}")]
     public IActionResult Detalhes(Guid id)
     {
-        var registro = repositorioTeste.SelecionarRegistroPorId(id);
+        var resultado = testeAppService.SelecionarPorId(id);
 
-        var questoes = repositorioQuestao.SelecionarRegistros()
-            .Where(q =>
-                q.Materia.Id == registro.Materia.Id &&
-                q.Materia.Serie == registro.Materia.Serie)
+        if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var detalhesVm = DetalhesTesteViewModel.ParaDetalhesVm(resultado.Value);
+
+        return View(detalhesVm);
+    }
+
+    [HttpGet("duplicar/{id:guid}")]
+    public IActionResult Duplicar(Guid id)
+    {
+        var resultado = testeAppService.SelecionarPorId(id);
+
+        if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var registro = resultado.Value;
+
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+        var questoes = questaoAppService.SelecionarTodos().ValueOrDefault;
+
+        var materiasFiltradas = materiaAppService
+            .SelecionarTodos()
+            .ValueOrDefault
+            .Where(m => m.Disciplina.Equals(registro.Disciplina))
+            .Where(m => m.Serie.Equals(registro.Serie))
             .ToList();
 
-        if (registro is null)
-            return RedirectToAction(nameof(Index));
+        var duplicarVm = new DuplicarTesteViewModel
+        {
+            TesteId = registro.Id,
+            Titulo = string.Empty,
 
-        var detalhesVM = new DetalhesTesteViewModel(
-            registro.Id,
-            registro.Titulo,
-            registro.Disciplina.Nome,
-            registro.Materia.Nome,
-            registro.Serie,
-            registro.TipoTeste,
-            registro.QuantidadeQuestoes
+            DisciplinaId = registro.Disciplina.Id,
+            Disciplina = registro.Disciplina.Nome,
+
+            Serie = registro.Serie,
+            NomeSerie = registro.Serie.GetDisplayName() ?? registro.Serie.ToString(),
+            QuantidadeQuestoes = registro.QuantidadeQuestoes,
+            Recuperacao = registro.Recuperacao,
+
+            MateriasDisponiveis = materiasFiltradas
+                .Select(m => new SelectListItem(m.Nome, m.Id.ToString()))
+                .ToList()
+        };
+
+        return View(duplicarVm);
+    }
+
+    [HttpPost("duplicar/{id:guid}/sortear-questoes")]
+    public IActionResult SortearQuestoesDuplicar(DuplicarTesteViewModel duplicarVm)
+    {
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+        var materias = materiaAppService.SelecionarTodos().ValueOrDefault;
+        var questoes = questaoAppService.SelecionarTodos().ValueOrDefault;
+
+        var entidade = DuplicarTesteViewModel.ParaEntidade(
+            duplicarVm,
+            disciplinas,
+            materias,
+            questoes
         );
 
-        detalhesVM.QuestoesSorteadas = questoes;
+        var questoesSorteadas = entidade.SortearQuestoes();
 
-        return View(detalhesVM);
+        if (questoesSorteadas is null)
+            return RedirectToAction(nameof(Index));
+
+        duplicarVm.QuestoesSorteadas = questoesSorteadas
+            .Select(DetalhesQuestaoViewModel.ParaDetalhesVm)
+            .ToList();
+
+        duplicarVm.MateriasDisponiveis = materias
+            .Where(m => m.Disciplina.Id.Equals(duplicarVm.DisciplinaId))
+            .Where(m => m.Serie.Equals(duplicarVm.Serie))
+            .Select(m => new SelectListItem(m.Nome, m.Id.ToString()))
+            .ToList();
+
+        return View(nameof(Duplicar), duplicarVm);
+    }
+
+    [HttpPost("duplicar/{id:guid}/confirmar")]
+    public IActionResult ConfirmarDuplicacao(DuplicarTesteViewModel segundaEtapaVm)
+    {
+        var disciplinas = disciplinaAppService.SelecionarTodos().ValueOrDefault;
+        var materias = materiaAppService.SelecionarTodos().ValueOrDefault;
+        var questoes = questaoAppService.SelecionarTodos().ValueOrDefault;
+
+        var entidade = DuplicarTesteViewModel.ParaEntidade(
+            segundaEtapaVm,
+            disciplinas,
+            materias,
+            questoes
+        );
+
+        var resultado = testeAppService.CadastrarTesteDuplicado(entidade);
+
+        if (resultado.IsFailed)
+        {
+            foreach (var erro in resultado.Errors)
+            {
+                var notificacaoJson = NotificacaoViewModel.GerarNotificacaoSerializada(
+                    erro.Message,
+                    erro.Reasons[0].Message
+                );
+
+                TempData.Add(nameof(NotificacaoViewModel), notificacaoJson);
+                break;
+            }
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet("gerar-pdf/{id:guid}")]
     public IActionResult GerarPdf(Guid id)
     {
-        var teste = repositorioTeste.SelecionarRegistroPorId(id);
-        if (teste == null)
-            return NotFound();
+        var resultado = testeAppService.GerarPdf(id);
 
-        var questoes = repositorioQuestao.SelecionarRegistros()
-            .Where(q =>
-                q.Materia.Id == teste.Materia.Id &&
-                q.Materia.Serie == teste.Serie)
-            .ToList();
+        if (resultado.IsFailed)
+            return RedirectToAction(nameof(Index));
 
-        var detalhesVM = new DetalhesTesteViewModel(
-            teste.Id,
-            teste.Titulo,
-            teste.Disciplina.Nome,
-            teste.Materia.Nome,
-            teste.Serie,
-            teste.TipoTeste,
-            teste.QuantidadeQuestoes
-        )
-        {
-            QuestoesSorteadas = questoes
-        };
-
-        var pdfBytes = PdfGenerator.GerarPdfSemGabarito(detalhesVM);
-
-        var fileName = $"{detalhesVM.Titulo}.pdf";
-
-        return File(pdfBytes, "application/pdf");
+        return File(resultado.Value, "application/pdf");
     }
 
-    [HttpGet("gerar-pdf-com-gabarito/{id:guid}")]
-    public IActionResult GerarPdfComGabarito(Guid id)
+    [HttpGet("gerar-pdf/gabarito/{id:guid}")]
+    public IActionResult GerarPdfGabarito(Guid id)
     {
-        var teste = repositorioTeste.SelecionarRegistroPorId(id);
-        if (teste == null)
-            return NotFound();
+        var resultado = testeAppService.GerarPdf(id, gabarito: true);
 
-        var questoes = repositorioQuestao.SelecionarRegistros()
-            .Where(q =>
-                q.Materia.Id == teste.Materia.Id &&
-                q.Materia.Serie == teste.Serie)
-            .ToList();
+        if (resultado.IsFailed)
+            return RedirectToAction(nameof(Index));
 
-        var detalhesVM = new DetalhesTesteViewModel(
-            teste.Id,
-            teste.Titulo,
-            teste.Disciplina.Nome,
-            teste.Materia.Nome,
-            teste.Serie,
-            teste.TipoTeste,
-            teste.QuantidadeQuestoes
-        )
-        {
-            QuestoesSorteadas = questoes
-        };
-
-        var pdfBytes = PdfGenerator.GerarPdfComGabarito(detalhesVM);
-
-        var fileName = $"{detalhesVM.Titulo} - Gabarito.pdf";
-
-        return File(pdfBytes, "application/pdf");
+        return File(resultado.Value, "application/pdf");
     }
 }

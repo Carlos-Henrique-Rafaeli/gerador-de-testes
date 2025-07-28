@@ -9,29 +9,31 @@ public class MapeadorTesteEmOrm : IEntityTypeConfiguration<Teste>
     public void Configure(EntityTypeBuilder<Teste> builder)
     {
         builder.Property(t => t.Id)
-            .ValueGeneratedNever();
+            .ValueGeneratedNever()
+            .IsRequired();
 
         builder.Property(t => t.Titulo)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.HasIndex(t => t.Titulo)
-            .IsUnique();
-
-        builder.Property(t => t.QuantidadeQuestoes)
+            .HasMaxLength(100)
             .IsRequired();
+
+        builder.Property(t => t.DataGeracao)
+            .IsRequired();
+
+        builder.Property(t => t.Recuperacao)
+            .IsRequired();
+
+        builder.HasOne(t => t.Disciplina)
+            .WithMany(d => d.Testes)
+            .IsRequired();
+
+        builder.HasOne(t => t.Materia)
+            .WithMany(m => m.Testes)
+            .IsRequired(false);
 
         builder.Property(t => t.Serie)
             .IsRequired();
 
-        builder.Property(t => t.TipoTeste)
-            .IsRequired();
-
-        builder.HasOne(t => t.Disciplina)
-            .WithMany(x => x.Testes)
-            .IsRequired();
-
-        builder.HasOne(t => t.Materia)
-            .WithMany(x => x.Testes);
+        builder.HasMany(t => t.Questoes)
+            .WithMany(t => t.Testes);
     }
 }

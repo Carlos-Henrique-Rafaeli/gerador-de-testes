@@ -4,10 +4,12 @@
 @{
     Layout = "_Layout";
     ViewBag.Titulo = "Visualização de Testes";
+
+    var notificacao = ViewData[nameof(NotificacaoViewModel)] as NotificacaoViewModel;
 }
 
 <p>
-    <a class="btn btn-primary px-4" href="/testes/gerar">
+    <a class="btn btn-primary px-4" asp-action="PrimeiraEtapaGerar">
         <i class="bi bi-plus"></i>
         Cadastrar Novo/a
     </a>
@@ -15,36 +17,41 @@
 
 <hr />
 
+@if (notificacao is not null)
+{
+    <div class="alert alert-danger alert-dismissible fade show my-3" role="alert">
+        <h6>@notificacao.Titulo</h6>
+        @notificacao.Mensagem
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="d-flex flex-wrap gap-2">
-    @foreach (var item in Model.Registros)
+    @foreach (var registro in Model.Registros)
     {
         <div class="col-12 col-md-3">
-            <div class="card">
+            <div class="card border-0">
                 <div class="card-body">
-                    <div>
-                        <h5 class="card-title">@item.Titulo</h5>
+                    <h5 class="card-title">@registro.Titulo</h5>
 
-                        <p class="card-text mb-1">
-                            <strong>Matéria:</strong> @item.Materia
-                        </p>
-                        <p class="card-text mb-1">
-                            <strong>Disciplina:</strong> @item.Disciplina
-                        </p>
-                        <p class="card-text mb-1">
-                            <strong>Série:</strong> @item.Serie.GetDisplayName()
-                        </p>
-                        <p class="card-text">
-                            <strong>Tipo de Teste:</strong> @item.TipoTeste
-                        </p>
-                    </div>
+                    <p class="card-text mb-0">
+                        <span class="fw-semibold">Série:</span> @registro.Serie
+                    </p>
+
+                    <p class="card-text mb-0">
+                        <span class="fw-semibold">Disciplina:</span> @registro.Disciplina
+                    </p>
+
                     <span class="d-flex gap-1 justify-content-end mt-4">
-                        <a href="/testes/detalhes/@item.Id" class="btn btn-secondary">
+                        <a asp-action="Detalhes" asp-route-id="@registro.Id" class="btn btn-secondary" title="Detalhes">
                             <i class="bi bi-search"></i>
                         </a>
-                        <a href="/testes/duplicar/@item.Id" class="btn btn-primary">
-                            <i class="bi bi-files"></i>
+
+                        <a asp-action="Duplicar" asp-route-id="@registro.Id" class="btn btn-primary" title="Duplicar">
+                            <i class="bi bi-copy"></i>
                         </a>
-                        <a href="/testes/excluir/@item.Id" class="btn btn-danger">
+                        
+                        <a asp-action="Excluir" asp-route-id="@registro.Id" class="btn btn-danger" title="Exclusão">
                             <i class="bi bi-trash"></i>
                         </a>
                     </span>

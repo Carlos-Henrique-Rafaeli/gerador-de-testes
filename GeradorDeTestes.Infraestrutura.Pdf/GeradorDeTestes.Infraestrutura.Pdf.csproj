@@ -7,13 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="QuestPDF" Version="2025.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GeradorDeTestes.Dominio\GeradorDeTestes.Dominio.csproj" />
-    <ProjectReference Include="..\GeradorDeTestes.Infraestrutura.Pdf\GeradorDeTestes.Infraestrutura.Pdf.csproj" />
   </ItemGroup>
 
 </Project>

@@ -30,8 +30,8 @@ public abstract class FormularioMateriaViewModel
 
         return new Materia(
             viewModel.Nome ?? string.Empty,
-            disciplina,
-            viewModel.Serie
+            viewModel.Serie,
+            disciplina
         );
     }
 }
