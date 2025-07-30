@@ -39,6 +39,7 @@ namespace GeradorDeTestes.WebApp
             builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
             builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
 
+            builder.Services.AddQuestPDFConfig();
             builder.Services.AddEntityFrameworkConfig(builder.Configuration);
 
             var app = builder.Build();

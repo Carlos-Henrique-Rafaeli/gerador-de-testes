@@ -11,7 +11,7 @@
     <div class="col-md-8">
         <div class="card rounded-4 border-0">
             <div class="card-body p-md-5">
-                <form asp-action="Duplicar">
+                <form asp-action="ConfirmarDuplicacao" asp-route-id="@Model.TesteId">
                     <h3>Formulário de Duplicação</h3>
 
                     @if (ViewData.ModelState["CadastroUnico"]?.Errors.Count > 0)
@@ -84,8 +84,6 @@
 
                     @if (Model.QuestoesSorteadas.Any())
                     {
-
-                        @* Reenvia alternativas já adicionadas *@
                         @for (int i = 0; i < Model.QuestoesSorteadas.Count; i++)
                         {
                             <input type="hidden" asp-for="QuestoesSorteadas[@i].Id" />

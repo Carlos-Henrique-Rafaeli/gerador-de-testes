@@ -1,38 +1,27 @@
 ﻿using FluentResults;
 using GeradorDeTestes.Aplicacao.Compartilhado;
 using GeradorDeTestes.Dominio.Compartilhado;
-using GeradorDeTestes.Dominio.ModuloDisciplina;
-using GeradorDeTestes.Dominio.ModuloMateria;
-using GeradorDeTestes.Dominio.ModuloQuestao;
 using GeradorDeTestes.Dominio.ModuloTeste;
-using GeradorDeTestes.Infraestrutura.Pdf;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
 
 namespace GeradorDeTestes.Aplicacao.ModuloTeste;
 
 public class TesteAppService
 {
     private readonly IRepositorioTeste repositorioTeste;
-    private readonly IRepositorioQuestao repositorioQuestao;
-    private readonly IRepositorioDisciplina repositorioDisciplina;
-    private readonly IRepositorioMateria repositorioMateria;
+    private readonly IGeradorTeste geradorTeste;
     private readonly IUnitOfWork unitOfWork;
     private readonly ILogger<TesteAppService> logger;
 
     public TesteAppService(
         IRepositorioTeste repositorioTeste,
-        IRepositorioQuestao repositorioQuestao,
-        IRepositorioDisciplina repositorioDisciplina,
-        IRepositorioMateria repositorioMateria,
+        IGeradorTeste geradorTeste,
         IUnitOfWork unitOfWork,
         ILogger<TesteAppService> logger
     )
     {
         this.repositorioTeste = repositorioTeste;
-        this.repositorioQuestao = repositorioQuestao;
-        this.repositorioDisciplina = repositorioDisciplina;
-        this.repositorioMateria = repositorioMateria;
+        this.geradorTeste = geradorTeste;
         this.unitOfWork = unitOfWork;
         this.logger = logger;
     }
@@ -140,9 +129,21 @@ public class TesteAppService
         if (registroSelecionado is null)
             return Result.Fail(ErrorResults.RegistroNaoEncontradoErro(id));
 
-        var documento = new ImpressaoTesteDocument(registroSelecionado, gabarito);
+        byte[] pdfBytes = null;
 
-        var pdfBytes = documento.GeneratePdf();
+        try
+        {
+            pdfBytes = geradorTeste.GerarNovoTeste(registroSelecionado, gabarito);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Ocorreu um erro durante a geração do PDF."
+            );
+
+            return Result.Fail(ErrorResults.ExcecaoInternaErro(ex));
+        }
 
         return pdfBytes;
     }
