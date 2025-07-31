@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GeradorDeTestes.Aplicacao\GeradorDeTestes.Aplicacao.csproj" />
+    <ProjectReference Include="..\GeradorDeTestes.Infraestrutura.IA.Gemini\GeradorDeTestes.Infraestrutura.IA.Gemini.csproj" />
     <ProjectReference Include="..\GeradorDeTestes.Infraestrutura.Orm\GeradorDeTestes.Infraestrutura.Orm.csproj" />
   </ItemGroup>
 

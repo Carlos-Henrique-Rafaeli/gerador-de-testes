@@ -38,9 +38,11 @@ namespace GeradorDeTestes.WebApp
             builder.Services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
             builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
             builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
+            builder.Services.AddEntityFrameworkConfig(builder.Configuration);
 
             builder.Services.AddQuestPDFConfig();
-            builder.Services.AddEntityFrameworkConfig(builder.Configuration);
+            builder.Services.AddGeminiChatConfig();
+            builder.Services.AddSerilogConfig(builder.Logging);
 
             var app = builder.Build();
 

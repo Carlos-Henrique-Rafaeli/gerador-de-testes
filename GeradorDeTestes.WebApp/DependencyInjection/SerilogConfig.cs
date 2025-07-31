@@ -9,7 +9,7 @@ public static class SerilogConfig
     {
         var caminhoAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-        var caminhoArquivoLogs = Path.Combine(caminhoAppData, "ControleDeBar", "error.log");
+        var caminhoArquivoLogs = Path.Combine(caminhoAppData, "GeradorDeTestes", "error.log");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
