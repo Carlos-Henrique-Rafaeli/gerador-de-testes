@@ -40,7 +40,7 @@ public class QuestaoAppService
 
         try
         {
-            repositorioQuestao.CadastrarRegistro(questao);
+            repositorioQuestao.Cadastrar(questao);
 
             unitOfWork.Commit();
 
@@ -69,7 +69,7 @@ public class QuestaoAppService
 
         try
         {
-            repositorioQuestao.EditarRegistro(id, questaoEditada);
+            repositorioQuestao.Editar(id, questaoEditada);
 
             unitOfWork.Commit();
 
@@ -103,7 +103,7 @@ public class QuestaoAppService
                 return Result.Fail(erro);
             }
 
-            repositorioQuestao.ExcluirRegistro(id);
+            repositorioQuestao.Excluir(id);
 
             unitOfWork.Commit();
 

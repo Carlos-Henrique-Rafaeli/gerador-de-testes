@@ -40,7 +40,7 @@ public class DisciplinaAppService
 
         try
         {
-            repositorioDisciplina.CadastrarRegistro(disciplina);
+            repositorioDisciplina.Cadastrar(disciplina);
 
             unitOfWork.Commit();
 
@@ -69,7 +69,7 @@ public class DisciplinaAppService
 
         try
         {
-            repositorioDisciplina.EditarRegistro(id, disciplinaEditada);
+            repositorioDisciplina.Editar(id, disciplinaEditada);
 
             unitOfWork.Commit();
 
@@ -113,7 +113,7 @@ public class DisciplinaAppService
                 return Result.Fail(erro);
             }
 
-            repositorioDisciplina.ExcluirRegistro(id);
+            repositorioDisciplina.Excluir(id);
 
             unitOfWork.Commit();
 

@@ -47,7 +47,7 @@ public class MateriaAppService
 
         try
         {
-            repositorioMateria.CadastrarRegistro(materia);
+            repositorioMateria.Cadastrar(materia);
 
             unitOfWork.Commit();
 
@@ -76,7 +76,7 @@ public class MateriaAppService
 
         try
         {
-            repositorioMateria.EditarRegistro(id, materiaEditada);
+            repositorioMateria.Editar(id, materiaEditada);
 
             unitOfWork.Commit();
 
@@ -120,7 +120,7 @@ public class MateriaAppService
                 return Result.Fail(erro);
             }
 
-            repositorioDisciplina.ExcluirRegistro(id);
+            repositorioDisciplina.Excluir(id);
 
             unitOfWork.Commit();
 

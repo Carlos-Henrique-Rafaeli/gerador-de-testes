@@ -12,12 +12,16 @@ public class RepositorioBaseEmOrm<T> where T : EntidadeBase<T>
         this.registros = contexto.Set<T>();
     }
 
-    public void CadastrarRegistro(T registro)
+    public void Cadastrar(T registro)
     {
         registros.Add(registro);
     }
+    public void CadastrarEntidades(IList<T> entidades)
+    {
+        registros.AddRange(entidades);
+    }
 
-    public bool EditarRegistro(Guid idRegistro, T registroEditado)
+    public bool Editar(Guid idRegistro, T registroEditado)
     {
         var registroSelecionado = SelecionarRegistroPorId(idRegistro);
 
@@ -29,7 +33,7 @@ public class RepositorioBaseEmOrm<T> where T : EntidadeBase<T>
         return true;
     }
 
-    public bool ExcluirRegistro(Guid idRegistro)
+    public bool Excluir(Guid idRegistro)
     {
         var registroSelecionado = SelecionarRegistroPorId(idRegistro);
 

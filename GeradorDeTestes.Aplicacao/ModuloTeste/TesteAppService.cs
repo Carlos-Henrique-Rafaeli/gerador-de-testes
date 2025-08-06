@@ -30,7 +30,7 @@ public class TesteAppService
     {
         try
         {
-            repositorioTeste.CadastrarRegistro(teste);
+            repositorioTeste.Cadastrar(teste);
 
             unitOfWork.Commit();
 
@@ -54,7 +54,7 @@ public class TesteAppService
     {
         try
         {
-            repositorioTeste.ExcluirRegistro(id);
+            repositorioTeste.Excluir(id);
 
             unitOfWork.Commit();
 
