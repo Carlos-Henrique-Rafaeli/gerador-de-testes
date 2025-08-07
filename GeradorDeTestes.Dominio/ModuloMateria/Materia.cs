@@ -2,6 +2,7 @@
 using GeradorDeTestes.Dominio.ModuloDisciplina;
 using GeradorDeTestes.Dominio.ModuloQuestao;
 using GeradorDeTestes.Dominio.ModuloTeste;
+using System.Linq;
 
 namespace GeradorDeTestes.Dominio.ModuloMateria;
 
@@ -24,6 +25,14 @@ public class Materia : EntidadeBase<Materia>
         Nome = nome;
         Serie = serie;
         Disciplina = disciplina;
+    }
+
+    public void AdicionarQuestoes(List<Questao> questoes)
+    {
+        if (Questoes.Any(questoes.Contains))
+            return;
+
+        Questoes.AddRange(questoes);
     }
 
     public void AdicionarQuestao(Questao questao)
