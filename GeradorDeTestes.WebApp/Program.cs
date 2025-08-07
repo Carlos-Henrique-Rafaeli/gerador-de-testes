@@ -23,13 +23,6 @@ namespace GeradorDeTestes.WebApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            QuestPDF.Settings.License = LicenseType.Community;
-  
-            builder.Services.AddControllersWithViews(options =>
-            {
-                options.Filters.Add<LogarAcaoAttribute>();
-            });
-
             builder.Services.AddScoped<DisciplinaAppService>();
             builder.Services.AddScoped<MateriaAppService>();
             builder.Services.AddScoped<QuestaoAppService>();
@@ -39,19 +32,26 @@ namespace GeradorDeTestes.WebApp
             builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
             builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
             builder.Services.AddEntityFrameworkConfig(builder.Configuration);
-
+            
+            builder.Services.AddSerilogConfig(builder.Logging);
             builder.Services.AddQuestPDFConfig();
             builder.Services.AddGeminiChatConfig();
-            builder.Services.AddSerilogConfig(builder.Logging);
+
+            builder.Services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add<LogarAcaoAttribute>();
+            });
 
             var app = builder.Build();
 
             if (!app.Environment.IsDevelopment())
                 app.UseExceptionHandler("/erro");
             else
-                app.UseDeveloperExceptionPage();
+            {
+                app.ApplyMigrations();
 
-            app.ApplyMigrations();
+                app.UseDeveloperExceptionPage();
+            }
 
             app.UseAntiforgery();
             app.UseStaticFiles();

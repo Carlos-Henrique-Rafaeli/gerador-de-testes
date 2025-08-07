@@ -15,7 +15,7 @@ public static class EntityFrameworkConfig
 
         services.AddDbContext<IUnitOfWork, GeradorDeTestesDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, (opt) => opt.EnableRetryOnFailure(3));
         });
     }
 }
