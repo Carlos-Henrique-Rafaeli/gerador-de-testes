@@ -7,7 +7,7 @@ public static class SerilogConfig
 {
     public static void AddSerilogConfig(this IServiceCollection services, ILoggingBuilder logging, IConfiguration configuration)
     {
-        var licenseKey = configuration["NEWRELIC_LICENSE_KEY"];
+        var licenseKey = configuration["NEWRELIC_LICENCE_KEY"];
 
         if (string.IsNullOrEmpty(licenseKey))
             throw new InvalidOperationException("A chave de licença da New Relic não foi encontrada nas variáveis de ambiente.");
