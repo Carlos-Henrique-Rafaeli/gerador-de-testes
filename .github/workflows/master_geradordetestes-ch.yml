@@ -75,13 +75,14 @@ jobs:
         env:
           ASPNET_ENVIRONMENT: "GITHUB_ACTIONS"
           SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
+          NEWRELIC_LICENCE_KEY: ${{ secrets.NEWRELIC_LICENCE_KEY }}
 
   deploy:
     runs-on: windows-latest
     needs: [build, test, migrate]
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read 
 
     steps:
       - name: Download artifact from build job

@@ -9,58 +9,56 @@ using GeradorDeTestes.WebApp.DependencyInjection;
 using GeradorDeTestes.WebApp.Orm;
 using GeradorDeTestes.Dominio.ModuloTeste;
 using GeradorDeTestes.Infraestrutura.Orm.ModuloTeste;
-using QuestPDF.Infrastructure;
 using GeradorDeTestes.Aplicacao;
 using GeradorDeTestes.Aplicacao.ModuloMateria;
 using GeradorDeTestes.Aplicacao.ModuloQuestao;
 using GeradorDeTestes.Aplicacao.ModuloTeste;
 
-namespace GeradorDeTestes.WebApp
+namespace GeradorDeTestes.WebApp;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddScoped<DisciplinaAppService>();
+        builder.Services.AddScoped<MateriaAppService>();
+        builder.Services.AddScoped<QuestaoAppService>();
+        builder.Services.AddScoped<TesteAppService>();
+        builder.Services.AddScoped<IRepositorioMateria, RepositorioMateriaEmOrm>();
+        builder.Services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
+        builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
+        builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
+        builder.Services.AddEntityFrameworkConfig(builder.Configuration);
+        
+        builder.Services.AddSerilogConfig(builder.Logging, builder.Configuration);
+        builder.Services.AddQuestPDFConfig();
+        builder.Services.AddGeminiChatConfig();
+
+        builder.Services.AddControllersWithViews(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
+            options.Filters.Add<LogarAcaoAttribute>();
+        });
 
-            builder.Services.AddScoped<DisciplinaAppService>();
-            builder.Services.AddScoped<MateriaAppService>();
-            builder.Services.AddScoped<QuestaoAppService>();
-            builder.Services.AddScoped<TesteAppService>();
-            builder.Services.AddScoped<IRepositorioMateria, RepositorioMateriaEmOrm>();
-            builder.Services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
-            builder.Services.AddScoped<IRepositorioTeste, RepositorioTesteEmOrm>();
-            builder.Services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
-            builder.Services.AddEntityFrameworkConfig(builder.Configuration);
-            
-            builder.Services.AddSerilogConfig(builder.Logging);
-            builder.Services.AddQuestPDFConfig();
-            builder.Services.AddGeminiChatConfig();
+        var app = builder.Build();
 
-            builder.Services.AddControllersWithViews(options =>
-            {
-                options.Filters.Add<LogarAcaoAttribute>();
-            });
+        if (!app.Environment.IsDevelopment())
+            app.UseExceptionHandler("/erro");
+        else
+        {
+            app.ApplyMigrations();
 
-            var app = builder.Build();
-
-            if (!app.Environment.IsDevelopment())
-                app.UseExceptionHandler("/erro");
-            else
-            {
-                app.ApplyMigrations();
-
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseAntiforgery();
-            app.UseStaticFiles();
-            app.UseHttpsRedirection();
-            app.UseRouting();
-
-            app.MapDefaultControllerRoute();
-
-            app.Run();
+            app.UseDeveloperExceptionPage();
         }
+
+        app.UseAntiforgery();
+        app.UseStaticFiles();
+        app.UseHttpsRedirection();
+        app.UseRouting();
+
+        app.MapDefaultControllerRoute();
+
+        app.Run();
     }
 }
