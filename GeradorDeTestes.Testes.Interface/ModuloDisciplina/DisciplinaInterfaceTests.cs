@@ -12,48 +12,59 @@ public sealed class DisciplinaInterfaceTests : TestFixture
     public void Deve_Cadastrar_Disciplina_Corretamente()
     {
         //Arange
-        driver?.Navigate().GoToUrl(Path.Combine(enderecoBase, "disciplinas"));
-
-        var elemento = driver?.FindElement(By.CssSelector("a[data-se='btnCadastrar']"));
-
-        elemento?.Click();
+        var disciplinaIndex = new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
 
         //Act
-        driver?.FindElement(By.Id("Nome")).SendKeys("Matemática");
-
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
+        disciplinaIndex
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
         //Assert
-        var elementosCard = driver?.FindElements(By.CssSelector(".card"));
-
-        Assert.AreEqual(1, elementosCard?.Count);
+        Assert.IsTrue(disciplinaIndex.ContemDisciplina("Matemática"));
     }
 
     [TestMethod]
     public void Deve_Editar_Disciplina_Corretamente()
     {
         //Arrange
-        var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(5));
+        var disciplinaIndex = new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
 
-        driver?.Navigate().GoToUrl(Path.Combine(enderecoBase, "disciplinas", "cadastrar"));
-
-        driver?.FindElement(By.Id("Nome")).SendKeys("Matemática");
-
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
-
-        wait.Until(d => d.FindElements(By.CssSelector(".card")).Count == 1);
-
-        driver?.FindElement(By.CssSelector(".card"))
-            .FindElement(By.CssSelector("a[title='Edição']")).Click();
+        disciplinaIndex
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
 
         //Act
-        driver?.FindElement(By.Id("Nome")).SendKeys(" Editada");
-
-        driver?.FindElement(By.CssSelector("button[type='submit']")).Click();
+        disciplinaIndex
+            .ClickEditar()
+            .PreencherNome("Matemática Editada")
+            .Confirmar();
 
         //Assert
-        wait.Until(d => d.FindElements(By.CssSelector(".card")).Count == 1);
+        Assert.IsTrue(disciplinaIndex.ContemDisciplina("Matemática Editada"));
+    }
 
-        Assert.IsTrue(driver?.PageSource.Contains("Matemática Editada"));
+    [TestMethod]
+    public void Deve_Excluir_Disciplina_Corretamente()
+    {
+        //Arrange
+        var disciplinaIndex = new DisciplinaIndexPageObject(driver!)
+            .IrPara(enderecoBase);
+
+        disciplinaIndex
+            .ClickCadastrar()
+            .PreencherNome("Matemática")
+            .Confirmar();
+
+        //Act
+        disciplinaIndex
+            .ClickExcluir()
+            .Confirmar();
+
+        //Assert
+        Assert.IsFalse(disciplinaIndex.ContemDisciplina("Matemática"));
     }
 }
