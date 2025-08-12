@@ -9,7 +9,7 @@
 }
 
 <p>
-    <a class="btn btn-primary px-4" href="/disciplinas/cadastrar">
+    <a class="btn btn-primary px-4" href="/disciplinas/cadastrar" data-se="btnCadastrar">
         <i class="bi bi-plus"></i>
         Cadastrar Novo/a
     </a>
@@ -36,10 +36,10 @@
                     <p class="card-text"><span class="fw-semibold">Nome:</span> @item.Nome</p>
             
                     <span class="d-flex gap-1 justify-content-end mt-4">
-                        <a href="/disciplinas/editar/@item.Id" class="btn btn-primary">
+                        <a href="/disciplinas/editar/@item.Id" class="btn btn-primary" title="Edição">
                             <i class="bi bi-pencil-square"></i>
                         </a>
-                        <a href="/disciplinas/excluir/@item.Id" class="btn btn-danger">
+                        <a href="/disciplinas/excluir/@item.Id" class="btn btn-danger" title="Exclusão">
                             <i class="bi bi-trash"></i>
                         </a>
                     </span>
