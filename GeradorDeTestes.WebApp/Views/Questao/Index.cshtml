@@ -10,7 +10,7 @@
 }
 
 <p>
-    <a class="btn btn-primary px-4" href="/questoes/cadastrar">
+    <a class="btn btn-primary px-4" href="/questoes/cadastrar" data-se="btnCadastrar">
         <i class="bi bi-plus"></i>
         Cadastrar Novo/a
     </a>
@@ -57,13 +57,13 @@
                         </p>
 
                         <div class="mt-auto d-flex gap-1 justify-content-end pt-3">
-                            <a asp-action="Detalhes" asp-route-id="@item.Id" class="btn btn-secondary">
+                            <a asp-action="Detalhes" asp-route-id="@item.Id" class="btn btn-secondary" title="Detalhes">
                                 <i class="bi bi-search"></i>
                             </a>
-                            <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-primary">
+                            <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-primary" title="Edição">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a asp-action="Excluir" asp-route-id="@item.Id" class="btn btn-danger">
+                            <a asp-action="Excluir" asp-route-id="@item.Id" class="btn btn-danger" title="Exclusão">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>

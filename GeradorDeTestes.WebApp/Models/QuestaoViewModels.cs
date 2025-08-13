@@ -125,7 +125,9 @@ public class ExcluirQuestaoViewModel
     public Guid Id { get; set; }
     public string Enunciado { get; set; }
 
-    public ExcluirQuestaoViewModel(Guid id, string enunciado)
+    public ExcluirQuestaoViewModel() { }
+
+    public ExcluirQuestaoViewModel(Guid id, string enunciado) : this()
     {
         Id = id;
         Enunciado = enunciado;

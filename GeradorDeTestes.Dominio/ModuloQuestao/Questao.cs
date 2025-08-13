@@ -66,5 +66,6 @@ public class Questao : EntidadeBase<Questao>
     {
         Enunciado = registroEditado.Enunciado;
         UtilizadaEmTeste = registroEditado.UtilizadaEmTeste;
+        Materia = registroEditado.Materia;
     }
 }

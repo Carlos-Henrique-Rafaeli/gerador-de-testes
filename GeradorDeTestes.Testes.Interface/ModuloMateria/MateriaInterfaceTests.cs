@@ -24,13 +24,13 @@ public sealed class MateriaInterfaceTests : TestFixture
         var materiaIndex = new MateriaIndexPageObject(driver!)
             .IrPara(enderecoBase);
 
-
         materiaIndex
             .ClickCadastrar()
             .PreencherNome("Quatro Operações")
             .SelecionarSerie("2º Ano - EM")
             .SelecionarDisciplina("Matemática")
             .Confirmar();
+        
         //Assert
         Assert.IsTrue(materiaIndex.ContemMateria("Quatro Operações"));
     }

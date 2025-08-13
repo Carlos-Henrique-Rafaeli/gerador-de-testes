@@ -39,7 +39,7 @@
                             <label for="Resposta" class="form-label">Resposta:</label>
 
                             <div class="d-flex gap-2 align-items-center">
-                                <input type="text" name="Resposta" class="form-control" />
+                                <input type="text" name="Resposta" id="Resposta" class="form-control" />
 
                                 <span class="d-flex gap-2">
                                     @Html.CheckBox("Correta", false, new { @class = "form-check-input" })
@@ -50,7 +50,7 @@
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-outline-primary w-100"
                                     type="submit"
-                                    formaction="/questoes/cadastrar/adicionar-alternativa">
+                                    formaction="/questoes/cadastrar/adicionar-alternativa" data-se="btnAdicionar">
                                 Adicionar
                             </button>
                         </div>
@@ -118,7 +118,7 @@
 
                     <div class="form-group d-flex align-items-center justify-content-end gap-3 mt-5">
                         <a href="/questoes">Voltar para a listagem</a>
-                        <button type="submit" class="btn btn-primary px-5">Confirmar</button>
+                        <button type="submit" class="btn btn-primary px-5" data-se="btnConfirmar" >Confirmar</button>
                     </div>
                 </form>
             </div>
