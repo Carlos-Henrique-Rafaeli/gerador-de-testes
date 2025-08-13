@@ -275,6 +275,16 @@ public class QuestaoController : Controller
             return View(nameof(Cadastrar), cadastrarVM);
         }
 
+        if (string.IsNullOrEmpty(alternativaVM.Resposta))
+        {
+            ModelState.AddModelError(
+                "CadastroUnico",
+                "A resposta deve conter algum texto."
+            );
+
+            return View(nameof(Cadastrar), cadastrarVM);
+        }
+
         cadastrarVM.AdicionarAlternativa(alternativaVM);
 
         return View(nameof(Cadastrar), cadastrarVM);
@@ -298,7 +308,7 @@ public class QuestaoController : Controller
         return View(nameof(Cadastrar), cadastrarVM);
     }
 
-    [HttpPost, Route("/questoes/editar/adicionar-alternativa")]
+    [HttpPost, Route("/questoes/editar/{id:guid}/adicionar-alternativa")]
     public IActionResult AdicionarAlternativa(EditarQuestaoViewModel editarVM, AdicionarAlternativaQuestaoViewModel alternativaVM)
     {
         var resultado = questaoAppService.AdicionarAlternativaEmQuestao(
@@ -324,9 +334,15 @@ public class QuestaoController : Controller
                     ModelState.AddModelError("CadastroUnico", erro.Reasons[0].Message);
                     break;
                 }
+
+                if (erro.Metadata["TipoErro"].ToString() == "ExcecaoInterna")
+                {
+                    ModelState.AddModelError("CadastroUnico", "A resposta deve conter algum texto.");
+                    break;
+                }
             }
 
-            return View(editarVM);
+            return View(nameof(Editar), editarVM);
         }
 
         editarVM.AdicionarAlternativa(alternativaVM);
@@ -334,7 +350,7 @@ public class QuestaoController : Controller
         return View(nameof(Editar), editarVM);
     }
 
-    [HttpPost, Route("/questoes/editar/remover-alternativa/{letra:alpha}")]
+    [HttpPost, Route("/questoes/editar/{id:guid}/remover-alternativa/{letra:alpha}")]
     public IActionResult RemoverAlternativa(char letra, EditarQuestaoViewModel editarVm)
     {
         var resultado = questaoAppService.RemoverAlternativaDeQuestao(letra, editarVm.Id);

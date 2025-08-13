@@ -54,6 +54,23 @@ public class QuestaoFormPageObject
         return this;
     }
 
+    public QuestaoFormPageObject RemoverRespostas(int quantidade)
+    {
+        for (int i = 0; i < quantidade; i++)
+        {
+            wait.Until(d =>
+            d.FindElement(By.CssSelector($"button[data-se='btnRemover']")).Displayed &&
+            d.FindElement(By.CssSelector($"button[data-se='btnRemover']")).Enabled
+            );
+
+            wait.Until(d => d.FindElement(By.CssSelector($"button[data-se='btnRemover']"))).Click();
+            
+            wait.Timeout = TimeSpan.FromSeconds(2);
+        }
+        
+        return this;
+    }
+
     public QuestaoFormPageObject SelecionarMateria(string materia)
     {
         wait.Until(d =>
@@ -67,9 +84,10 @@ public class QuestaoFormPageObject
         return this;
     }
 
-    public QuestaoIndexPageObject Confirmar()
+    public QuestaoIndexPageObject Confirmar(bool deveScrollar = false)
     {
-        new Actions(driver).ScrollByAmount(0, 300).Perform();
+        if (deveScrollar)
+            new Actions(driver).ScrollByAmount(0, 300).Perform();
 
         wait.Until(d => d.FindElement(By.CssSelector("button[data-se='btnConfirmar']"))).Click();
 
