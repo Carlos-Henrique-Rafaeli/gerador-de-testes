@@ -51,6 +51,8 @@ public class QuestaoFormPageObject
 
         wait.Until(d => d.FindElement(By.CssSelector("button[data-se='btnAdicionar']"))).Click();
 
+        wait.Timeout = TimeSpan.FromSeconds(2);
+
         return this;
     }
 
@@ -88,6 +90,8 @@ public class QuestaoFormPageObject
     {
         if (deveScrollar)
             new Actions(driver).ScrollByAmount(0, 300).Perform();
+
+        wait.Timeout = TimeSpan.FromSeconds(2);
 
         wait.Until(d => d.FindElement(By.CssSelector("button[data-se='btnConfirmar']"))).Click();
 

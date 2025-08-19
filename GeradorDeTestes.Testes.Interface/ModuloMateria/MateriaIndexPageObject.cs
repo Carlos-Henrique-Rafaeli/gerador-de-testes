@@ -24,27 +24,29 @@ public class MateriaIndexPageObject
 
     public MateriaFormPageObject ClickCadastrar()
     {
-        driver?.FindElement(By.CssSelector("a[data-se='btnCadastrar']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector("a[data-se='btnCadastrar']"))).Click();
 
         return new MateriaFormPageObject(driver!);
     }
 
     public MateriaFormPageObject ClickEditar()
     {
-        driver?.FindElement(By.CssSelector(".card a[title='Edição']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector(".card a[title='Edição']"))).Click();
 
         return new MateriaFormPageObject(driver!);
     }
 
     public MateriaFormPageObject ClickExcluir()
     {
-        driver?.FindElement(By.CssSelector(".card a[title='Exclusão']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector(".card a[title='Exclusão']"))).Click();
 
         return new MateriaFormPageObject(driver!);
     }
 
     public bool ContemMateria(string nome)
     {
+        wait.Until(d => d.FindElement(By.CssSelector("a[data-se='btnCadastrar']")).Displayed);
+
         return driver.PageSource.Contains(nome);
     }
 }

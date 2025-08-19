@@ -51,7 +51,7 @@
                     <div class="d-flex gap-2 mt-3">
                         <label class="fw-semibold">Recuperação:</label>
                         <span>@(Model.Recuperacao ? "Sim" : "Não")</span>
-                        @Html.CheckBoxFor(x => x.Recuperacao, new { @class = "form-check-input", @type = "hidden" })
+                        @Html.HiddenFor(x => x.Recuperacao)
                     </div>
 
                     <div class="row justify-content-end align-items-end g-3 mt-3">
@@ -65,7 +65,7 @@
                             <div class="col d-flex align-items-end">
                                 <button class="btn btn-outline-primary w-100"
                                         type="submit"
-                                        formaction="/testes/gerar/segunda-etapa/sortear-questoes">
+                                        formaction="/testes/gerar/segunda-etapa/sortear-questoes" data-se="btnSortear">
                                     Sortear Questões
                                 </button>
                             </div>
@@ -75,7 +75,7 @@
                             <div class="col-3 d-flex align-items-end">
                                 <button class="btn btn-outline-primary w-100"
                                         type="submit"
-                                        formaction="/testes/gerar/segunda-etapa/sortear-questoes">
+                                        formaction="/testes/gerar/segunda-etapa/sortear-questoes" data-se="btnSortear">
                                     Sortear Questões
                                 </button>
                             </div>
@@ -128,7 +128,7 @@
 
                     <div class="form-group d-flex align-items-center justify-content-end gap-3 mt-5">
                         <a asp-action="Index">Voltar para a listagem</a>
-                        <button type="submit" class="btn btn-primary rounded-3 px-5">Confirmar</button>
+                        <button type="submit" class="btn btn-primary rounded-3 px-5" data-se="btnConfirmar">Confirmar</button>
                     </div>
                 </form>
             </div>

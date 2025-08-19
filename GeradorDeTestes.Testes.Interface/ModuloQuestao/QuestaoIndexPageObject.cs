@@ -25,27 +25,29 @@ public class QuestaoIndexPageObject
 
     public QuestaoFormPageObject ClickCadastrar()
     {
-        driver?.FindElement(By.CssSelector("a[data-se='btnCadastrar']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector("a[data-se='btnCadastrar']"))).Click();
 
         return new QuestaoFormPageObject(driver!);
     }
 
     public QuestaoFormPageObject ClickEditar()
     {
-        driver?.FindElement(By.CssSelector(".card a[title='Edição']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector(".card a[title='Edição']"))).Click();
 
         return new QuestaoFormPageObject(driver!);
     }
 
     public QuestaoFormPageObject ClickExcluir()
     {
-        driver?.FindElement(By.CssSelector(".card a[title='Exclusão']")).Click();
+        wait.Until(d => d?.FindElement(By.CssSelector(".card a[title='Exclusão']"))).Click();
 
         return new QuestaoFormPageObject(driver!);
     }
 
     public bool ContemQuestao(string nome)
     {
+        wait.Until(d => d.FindElement(By.CssSelector("a[data-se='btnCadastrar']")).Displayed);
+
         return driver.PageSource.Contains(nome);
     }
 }

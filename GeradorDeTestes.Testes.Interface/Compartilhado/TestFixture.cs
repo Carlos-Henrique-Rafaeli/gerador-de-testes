@@ -1,6 +1,7 @@
 ﻿using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
 using GeradorDeTestes.Testes.Integracao.Compartilhado;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 
 namespace GeradorDeTestes.Testes.Interface.Compartilhado;
@@ -33,9 +34,12 @@ public abstract class TestFixture
     private static void InicializarDriver()
     {
         var options = new FirefoxOptions();
-        options.AddArgument("--headless");
+
+        options.AddArgument("--start-maximized");
 
         driver = new FirefoxDriver();
+
+        driver.Manage().Window.FullScreen();
     }
 
     private static void FinalizarDriver()
