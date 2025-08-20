@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read 
 
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +51,10 @@ jobs:
     
       - name: Run tests
         run: dotnet test --configuration Release --verbosity normal
+        env:
+          ASPNET_ENVIRONMENT: "GITHUB_ACTIONS"
+          SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
+          NEWRELIC_LICENCE_KEY: ${{ secrets.NEWRELIC_LICENCE_KEY }}
 
   migrate:
     runs-on: windows-latest
