@@ -13,6 +13,7 @@ using GeradorDeTestes.Aplicacao;
 using GeradorDeTestes.Aplicacao.ModuloMateria;
 using GeradorDeTestes.Aplicacao.ModuloQuestao;
 using GeradorDeTestes.Aplicacao.ModuloTeste;
+using GeradorDeTestes.Infraestrutura.Orm.Compartilhado;
 
 namespace GeradorDeTestes.WebApp;
 
@@ -36,6 +37,9 @@ public class Program
         builder.Services.AddQuestPDFConfig();
         builder.Services.AddGeminiChatConfig();
 
+        builder.Services.AddHealthChecks()
+            .AddDbContextCheck<GeradorDeTestesDbContext>();
+
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add<LogarAcaoAttribute>();
@@ -56,6 +60,8 @@ public class Program
         app.UseStaticFiles();
         app.UseHttpsRedirection();
         app.UseRouting();
+
+        app.MapHealthChecks("/health");
 
         app.MapDefaultControllerRoute();
 
